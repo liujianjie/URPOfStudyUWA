@@ -3,17 +3,44 @@
 
 #include "ShaderLibrary/Common.hlsl"
 
+// 用作顶点函数的输入参数
+struct Attributes
+{
+    float3 positionOS : POSITION;
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+// 用作片元函数的输入参数
+struct Varyings
+{
+    float4 positionCS : SV_Position;
+    float2 baseUV : VAR_BASE_UV;
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
 // 顶点函数
-float4 UnlitPassVertex(float3 positionOS : POSITION) : SV_POSITION
+Varyings UnlitPassVertex(Attributes input)
 {
-    float3 positionWS = TransformObjectToWorld(positionOS.xyz);
-    return TransformWorldToHClip(positionWS);
+    Varyings output;
+    UNITY_SETUP_INSTANCE_ID(input);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
+    float3 positionWS = TransformObjectToWorld(input.positionOS);
+    output.positionCS = TransformWorldToHClip(positionWS);
+    return output;
 }
-float4 _BaseColor;
+// 所有材质的属性我们需要在常量缓冲区里定义
+//CBUFFER_START(UnityPerMaterial)
+//    float4 _BaseColor;
+//CBUFFER_END
+
+UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
+UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
+UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
+
 // 片元函数
-float4 UnlitPassFragment() : SV_TARGET
+float4 UnlitPassFragment(Varyings input) : SV_TARGET
 {
-    return _BaseColor;
+    UNITY_SETUP_INSTANCE_ID(input);
+    return UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseColor);
 }
 
 

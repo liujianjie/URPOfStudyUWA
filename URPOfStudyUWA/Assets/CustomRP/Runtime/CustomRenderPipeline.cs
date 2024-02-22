@@ -6,11 +6,20 @@ using UnityEngine.Rendering;
 public class CustomRenderPipeline : RenderPipeline
 {
     CameraRenderer renderer = new CameraRenderer();
+    bool useDynamicBatching, useGPUInstancing;
+    // 测试SRP合批启用
+    public CustomRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher)
+    {
+        // 设置启用状态
+        this.useDynamicBatching = useDynamicBatching;
+        this.useGPUInstancing = useGPUInstancing;
+        GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
+    }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
         foreach (var came in cameras)
         {
-            renderer.Render(context, came);
+            renderer.Render(context, came, useDynamicBatching, useGPUInstancing);
         }
     }
 
