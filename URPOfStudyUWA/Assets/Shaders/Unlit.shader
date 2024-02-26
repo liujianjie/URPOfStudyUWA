@@ -5,6 +5,7 @@ Shader "CustomeRP/Unlit"
         _BaseColor("Color", Color) = (1.0, 1.0, 1.0, 1.0)
         // 透明度测试的阙值
         _Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
+        [Toggle(_CLIPPING)] _Clipping("Alpha Clipping", Float) = 0
         // 设置混合模式
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend("Src Blend", Float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend("Dst Blend", Float) = 0
@@ -20,6 +21,7 @@ Shader "CustomeRP/Unlit"
             // 是否写入深度
             ZWrite[_ZWrite]
 	        HLSLPROGRAM
+            #pragma shader_feature _CLIPPING    // 与Toggle名称对应
             #pragma multi_compile_instancing
 	        #pragma vertex UnlitPassVertex
 	        #pragma fragment UnlitPassFragment
