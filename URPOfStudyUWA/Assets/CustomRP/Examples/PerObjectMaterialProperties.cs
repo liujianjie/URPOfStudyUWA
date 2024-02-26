@@ -6,10 +6,15 @@ using UnityEngine;
 public class PerObjectMaterialProperties : MonoBehaviour
 {
     static int baseColorID = Shader.PropertyToID("_BaseColor");
+    static int cutoffId = Shader.PropertyToID("_Cutoff");
+
+    static MaterialPropertyBlock block;
 
     [SerializeField]
     Color baseColor = Color.white;
-    static MaterialPropertyBlock block;
+
+    [SerializeField, Range(0f, 1f)]
+    float cutoff = 0.5f;
 
     private void OnValidate()
     {
@@ -19,6 +24,8 @@ public class PerObjectMaterialProperties : MonoBehaviour
         }
         // 设置材质属性
         block.SetColor(baseColorID, baseColor);
+        Debug.Log(cutoff);
+        block.SetFloat(cutoffId, cutoff);
 
         GetComponent<Renderer>().SetPropertyBlock(block);
     }
