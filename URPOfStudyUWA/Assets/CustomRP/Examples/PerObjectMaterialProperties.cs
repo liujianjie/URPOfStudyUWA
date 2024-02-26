@@ -24,7 +24,6 @@ public class PerObjectMaterialProperties : MonoBehaviour
         }
         // 设置材质属性
         block.SetColor(baseColorID, baseColor);
-        Debug.Log(cutoff);
         block.SetFloat(cutoffId, cutoff);
 
         GetComponent<Renderer>().SetPropertyBlock(block);

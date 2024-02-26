@@ -64,6 +64,7 @@ public partial class CameraRenderer
         buffer.Clear();
     }
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+    static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
 
 
     /// <summary>
@@ -83,6 +84,9 @@ public partial class CameraRenderer
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing
         };
+        // 渲染customelit表示的pass块
+        drawingSettings.SetShaderPassName(1, litShaderTagId);
+
         // 设置哪些类型的渲染队列可以被绘制
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
 
