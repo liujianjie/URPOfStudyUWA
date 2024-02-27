@@ -3,6 +3,7 @@
 
 #include "ShaderLibrary/Common.hlsl"
 #include "ShaderLibrary/Surface.hlsl"
+#include "ShaderLibrary/Light.hlsl"
 #include "ShaderLibrary/Lighting.hlsl"
 
 // 所有材质的属性我们需要在常量缓冲区里定义
@@ -69,7 +70,7 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.normal = normalize(input.normalWS);
     surface.color = base.rgb;
     surface.alpha = base.a;
-    // 哦那个给表面属性计算最终光照结果
+    // 通过表面属性计算最终光照结果
     float3 color = GetLighting(surface);
     return float4(color, surface.alpha);
 }
