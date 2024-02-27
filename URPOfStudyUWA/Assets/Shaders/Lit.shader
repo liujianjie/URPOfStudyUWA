@@ -22,6 +22,7 @@ Shader "CustomeRP/Lit"
             // 是否写入深度
             ZWrite[_ZWrite]
 	        HLSLPROGRAM
+            #pragma target 3.5
             #pragma shader_feature _CLIPPING    // 与Toggle名称对应
             #pragma multi_compile_instancing
 	        #pragma vertex LitPassVertex
