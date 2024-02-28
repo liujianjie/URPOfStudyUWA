@@ -15,10 +15,13 @@
 TEXTURE2D(_BaseMap);            // 定义一张纹理
 SAMPLER(sampler_BaseMap);       // 为上一个定义的纹理提供采样器
 
+// 供C#代码Shader.PropertyToID("_BaseColor");获取
 UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
 UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST) // 提供纹理的缩放和平移
 UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
+UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
+UNITY_DEFINE_INSTANCED_PROP(float, _Smoothness)
 UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
 
 // 用作顶点函数的输入参数
@@ -70,6 +73,8 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.normal = normalize(input.normalWS);
     surface.color = base.rgb;
     surface.alpha = base.a;
+    surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPermaterial, _Metallic);
+    surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPermaterial, _Smoothness);
     // 通过表面属性计算最终光照结果
     float3 color = GetLighting(surface);
     return float4(color, surface.alpha);
