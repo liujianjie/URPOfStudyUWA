@@ -3,6 +3,7 @@
 #define CUSTOM_COMMON_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 
 // 使用UnityInput里面的转换矩阵前先include进来
 #include "UnityInput.hlsl"

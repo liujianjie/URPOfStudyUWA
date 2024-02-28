@@ -4,6 +4,7 @@
 #include "ShaderLibrary/Common.hlsl"
 #include "ShaderLibrary/Surface.hlsl"
 #include "ShaderLibrary/Light.hlsl"
+#include "ShaderLibrary/BRDF.hlsl"
 #include "ShaderLibrary/Lighting.hlsl"
 
 // 所有材质的属性我们需要在常量缓冲区里定义
@@ -36,6 +37,7 @@ struct Attributes
 struct Varyings
 {
     float4 positionCS : SV_POSITION;
+    float3 positionWS : VAR_POSITION;// 顶点在世界空间的位置
     float2 baseUV : VAR_BASE_UV;
     float3 normalWS : NORMAL; // 世界法线
     UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -47,8 +49,8 @@ Varyings LitPassVertex(Attributes input)
     Varyings output;
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
-    float3 positionWS = TransformObjectToWorld(input.positionOS);
-    output.positionCS = TransformWorldToHClip(positionWS);
+    output.positionWS = TransformObjectToWorld(input.positionOS);
+    output.positionCS = TransformWorldToHClip(output.positionWS);
     // 计算世界空间的法线
     output.normalWS = TransformObjectToWorldNormal(input.normalOS);
     // 计算缩放和偏移以后的UV坐标
@@ -75,8 +77,11 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.alpha = base.a;
     surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPermaterial, _Metallic);
     surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPermaterial, _Smoothness);
+    // 得到视角方向
+    surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionCS);
     // 通过表面属性计算最终光照结果
-    float3 color = GetLighting(surface);
+    BRDF brdf = GetBRDF(surface);
+    float3 color = GetLighting(surface, brdf);
     return float4(color, surface.alpha);
 }
 
