@@ -35,5 +35,16 @@ BRDF GetBRDF(Surface surface)
     brdf.roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
     return brdf;
 }
+// 根据公式得到镜面反射强度
+float SpecularStrength(Surface surface, BRDF brdf, Light light)
+{
+    float3 h = SafeNormalize(light.direction + surface.viewDirection);  // 半角向量，H：归一化的L+V（光线方向+视角方向）
+    float nh2 = Square(saturate(dot(surface.normal, h)));               // 法线、  ，nh2: N·H的平方
+    float lh2 = Square(saturate(dot(light.direction, h)));              // 光线方向、，lh2: L·H的平方
+    float r2 = Square(brdf.roughness);                                  // 粗糙度的平方
+    float d2 = Square(nh2 * (r2 - 1.0) + 1.00001);                      // D函数的平方
+    float normalization = brdf.roughness * 4.0 + 2.0;                   // 归一化因子：n = 4r + 2
+    return r2 / (d2 * max(0.1, lh2) * normalization);                   // 镜面反射强度
+}
 
 #endif

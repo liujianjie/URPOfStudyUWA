@@ -32,4 +32,11 @@
 //{
 //    return mul(unity_MatrixVP, float4(positionWS, 1.0));
 //}
+
+// 获取值的平方的方法
+float Square(float v)
+{
+    return v * v;
+}
+
 #endif
