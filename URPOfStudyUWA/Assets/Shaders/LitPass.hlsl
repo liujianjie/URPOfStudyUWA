@@ -82,7 +82,11 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     // 得到视角方向
     surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionCS);
     // 通过表面属性计算最终光照结果
-    BRDF brdf = GetBRDF(surface);               // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
+    #if defined(_PREMULTIPLY_ALPHA)
+        BRDF brdf = GetBRDF(surface, true);
+    #else
+        BRDF brdf = GetBRDF(surface); // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
+    #endif
     float3 color = GetLighting(surface, brdf);  // 然后用BRDF数据计算光照结果
     return float4(color, surface.alpha);
 }

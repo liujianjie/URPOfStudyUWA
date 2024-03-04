@@ -6,6 +6,7 @@ Shader "CustomeRP/Lit"
         // 透明度测试的阙值
         _Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
         [Toggle(_CLIPPING)] _Clipping("Alpha Clipping", Float) = 0
+        [Toggle(_PREMULTIPLY_ALPHA)] _PremulAlpha("Premultiply Alpha", Float) = 0
         // 金属光和光滑度
         _Metallic("Metallic", Range(0, 1)) = 0
         _Smoothness("Smoothness", Range(0, 1)) = 0.5
@@ -27,6 +28,8 @@ Shader "CustomeRP/Lit"
 	        HLSLPROGRAM
             #pragma target 3.5
             #pragma shader_feature _CLIPPING    // 与Toggle名称对应
+            // 是否透明通道预乘
+            #pragma shader_feature _PREMULTIPLY_ALPHA
             #pragma multi_compile_instancing
 	        #pragma vertex LitPassVertex
 	        #pragma fragment LitPassFragment

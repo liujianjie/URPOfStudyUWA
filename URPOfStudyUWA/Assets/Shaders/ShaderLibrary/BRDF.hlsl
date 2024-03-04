@@ -19,7 +19,7 @@ struct BRDF
     float roughness;
 };
 // 获取给定表面的BRDF数据
-BRDF GetBRDF(Surface surface)
+BRDF GetBRDF(Surface surface, bool applyAlphaToDiffuse = false)
 {
     BRDF brdf;
     //float oneMinusReflectivity = 1.0 - surface.metallic;              // 反射率
@@ -29,6 +29,12 @@ BRDF GetBRDF(Surface surface)
     
     float oneMinusReflectivity = OneMinusReflectivity(surface.metallic); // 反射率
     brdf.diffuse = surface.color * oneMinusReflectivity;
+    // 透明度预乘
+    if (applyAlphaToDiffuse)
+    {
+        brdf.diffuse *= surface.alpha;
+    }
+    brdf.diffuse *= surface.alpha;
     brdf.specular = lerp(MIN_REFLECTIVITY, surface.color, surface.metallic); // 非金属的镜面为白色，金属影响镜面反射的额颜色
     // 光滑度转为实际粗糙度
     float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
