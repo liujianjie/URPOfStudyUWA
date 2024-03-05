@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 public class Lighting 
 {
@@ -27,11 +28,14 @@ public class Lighting
 
     // 存储相机剔除后的结果
     CullingResults cullingResults;
+    Shadows shadows = new Shadows();
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults)
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
     {
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
+        // 传递阴影数据
+        shadows.Setup(context, cullingResults, shadowSettings);
         // 发送光源数据
         //SetupDirectionalLight();
         SetupLights();
@@ -74,6 +78,8 @@ public class Lighting
     {
         dirLightColors[index] = visibleLight.finalColor;
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);// 第三列是光照方向，取反是来源方向
+
+        shadows.ReserveDirectionalShadows(visibleLight.light, index);
 
         //Light light = RenderSettings.sun;
         //// 灯光的颜色我们再乘上光强作为最终颜色

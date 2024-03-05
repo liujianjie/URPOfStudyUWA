@@ -11,7 +11,8 @@ public partial class CameraRenderer
     Lighting lighting = new Lighting();
 
     public void Render(ScriptableRenderContext context, Camera camera,
-        bool useDynamicBatching, bool useGPUInstancing)
+        bool useDynamicBatching, bool useGPUInstancing,
+        ShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -21,13 +22,14 @@ public partial class CameraRenderer
         // 在game视图绘制的几何体也绘制到scene视图中
         PrepareForSceneWindow();
 
-        if (!Cull())
+        if (!Cull(shadowSettings.maxDistance))
         {
             return;
         }
 
         Setup();
-        lighting.Setup(context, cullingResults);
+        // 光源数据和阴影数据发送到GPU计算光照
+        lighting.Setup(context, cullingResults, shadowSettings);
         // 绘制几何体
         DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
         // 绘制SRP不支持的着色器类型
@@ -128,12 +130,13 @@ public partial class CameraRenderer
     /// 剔除
     /// </summary>
     /// <returns></returns>
-    bool Cull()
+    bool Cull(float maxShadowDistance)
     {
-        ScriptableCullingParameters p;
         // 获取相机的剔除参数
-        if (camera.TryGetCullingParameters(out p))
+        if (camera.TryGetCullingParameters(out ScriptableCullingParameters p))
         {
+            // 得到最大阴影距离，和相机远截面作比较，取最小的那个作为阴影距离
+            p.shadowDistance = Mathf.Min(maxShadowDistance, camera.farClipPlane);
             // 剔除
             cullingResults = context.Cull(ref p);
             return true;
