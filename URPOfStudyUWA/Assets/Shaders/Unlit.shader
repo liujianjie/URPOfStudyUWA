@@ -30,4 +30,6 @@ Shader "CustomeRP/Unlit"
 	        ENDHLSL
         }
     }
+    
+    CustomEditor "CustomShaderGUI"
 }

@@ -34,7 +34,6 @@ BRDF GetBRDF(Surface surface, bool applyAlphaToDiffuse = false)
     {
         brdf.diffuse *= surface.alpha;
     }
-    brdf.diffuse *= surface.alpha;
     brdf.specular = lerp(MIN_REFLECTIVITY, surface.color, surface.metallic); // 非金属的镜面为白色，金属影响镜面反射的额颜色
     // 光滑度转为实际粗糙度
     float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);

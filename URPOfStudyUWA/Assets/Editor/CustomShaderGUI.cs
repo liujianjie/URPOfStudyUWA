@@ -29,15 +29,23 @@ public class CustomShaderGUI : ShaderGUI
         }
     }
     // 设置材质属性
-    void SetProperty(string name, float value)
+    bool SetProperty(string name, float value)
     {
-        FindProperty(name, properties).floatValue = value;
+        MaterialProperty property = FindProperty(name, properties, false);
+        if (property != null)
+        {
+            property.floatValue = value;
+            return true;
+        }
+        return false;
     }
     // 同时设置关键字和属性
     void SetProperty(string name, string keyword, bool value)
     {
-        SetProperty(name, value ? 1f :0f);
-        SetKeyword(keyword, value);
+        if (SetProperty(name, value ? 1f : 0f))
+        {
+            SetKeyword(keyword, value);
+        }
     }
     // 设置关键字状态
     void SetKeyword(string keyword, bool enabled)
@@ -88,6 +96,10 @@ public class CustomShaderGUI : ShaderGUI
             }
         }
     }
+    // 有些渲染模式，判断shader中是否有此属性
+    bool HasProperty(string name) => FindProperty(name, properties, false) != null;
+    bool HasPremultiplyAlpha => HasProperty("_PremulAlpha");
+
     // 渲染模式预置
     // 每种渲染模式都有对应一个按钮
     bool PresetButton(string name)
@@ -142,7 +154,7 @@ public class CustomShaderGUI : ShaderGUI
     // 预设了透明度标准的透明渲染模式
     void TransparentPreset()
     {
-        if (PresetButton("Transparent"))
+        if (HasPremultiplyAlpha && PresetButton("Transparent"))
         {
             Clipping = false;
             PremultiplyAlpha = false;
@@ -152,4 +164,6 @@ public class CustomShaderGUI : ShaderGUI
             RenderQueue = RenderQueue.Transparent;
         }
     }
+
+
 }
