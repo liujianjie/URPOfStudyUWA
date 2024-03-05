@@ -39,6 +39,9 @@ public class Lighting
         // 发送光源数据
         //SetupDirectionalLight();
         SetupLights();
+
+        shadows.Render();
+
         buffer.EndSample(bufferName);
 
         context.ExecuteCommandBuffer(buffer);
@@ -87,4 +90,10 @@ public class Lighting
         ////buffer.SetGlobalVector(dirLightColorId, Color.yellow * light.intensity);  // 获取灯光的颜色要转到线性空间，并乘以光照强度
         //buffer.SetGlobalVector(dirLightDirectionId, -light.transform.forward);          // 正前方取反作为光照方向，用的是光线的来源方向，而不是光线的照射方向
     }
+    // 释放阴影贴图RT内存
+    public void Cleanup()
+    {
+        shadows.Cleanup();
+    }
+
 }

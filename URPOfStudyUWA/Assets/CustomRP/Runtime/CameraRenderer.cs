@@ -26,16 +26,24 @@ public partial class CameraRenderer
         {
             return;
         }
+        // 自定义渲染
+        buffer.BeginSample(SampleName); // 开始采样
+        ExecuteBuffer();                // 执行缓冲区命令
+
+        // 光源数据和阴影数据发送到GPU计算光照
+        lighting.Setup(context, cullingResults, shadowSettings);    // 阴影应在之前
+        buffer.EndSample(SampleName);   // 
 
         Setup();
-        // 光源数据和阴影数据发送到GPU计算光照
-        lighting.Setup(context, cullingResults, shadowSettings);
+
         // 绘制几何体
         DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
         // 绘制SRP不支持的着色器类型
         DrawUnsupportedShaders();
         // 绘制Gizmos
         DrawGizmos();
+        // 调用光照的Cleanup
+        lighting.Cleanup();
         Submit();
     }
     /// <summary>
@@ -54,10 +62,6 @@ public partial class CameraRenderer
             flags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.white);
         // 为保证下一帧渲染正确，需要清除上一帧的渲染结果
         //buffer.ClearRenderTarget(true, true, Color.clear);
-
-        // 自定义渲染
-        buffer.BeginSample(SampleName); // 开始采样
-        ExecuteBuffer();    // 执行缓冲区命令
 
     }
     /// <summary>

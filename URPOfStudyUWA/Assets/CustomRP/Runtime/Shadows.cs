@@ -29,6 +29,9 @@ public class Shadows
     // 已存储的可投射阴影的平行光数量
     int ShadowedDirectionalLightCount;
 
+    // 创建一张rendertexture
+    static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
+
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings)
     {
@@ -52,5 +55,33 @@ public class Shadows
         {
             ShadowedDirectionalLights[ShadowedDirectionalLightCount++] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex };
         }
+    }
+    // 阴影渲染
+    public void Render()
+    {
+        if (ShadowedDirectionalLightCount > 0)
+        {
+            RenderDirectionalShadows();
+        }
+    }
+    // 渲染定向光阴影
+    void RenderDirectionalShadows()
+    {
+        // 创建rendertexture，并指定该类型是阴影贴图
+        int atlasSize = (int)settings.directional.atlasSize;
+        buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        // 指定渲染数据存储到RT中
+        buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+
+        // 清除深度缓冲区
+        buffer.ClearRenderTarget(true, false, Color.clear);
+        ExecuteBuffer();
+
+    }
+    // 释放临时渲染纹理
+    public void Cleanup()
+    {
+        buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        ExecuteBuffer();
     }
 }
