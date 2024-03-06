@@ -27,9 +27,8 @@ Shader "CustomeRP/Lit"
             ZWrite[_ZWrite]
 	        HLSLPROGRAM
             #pragma target 3.5
-            #pragma shader_feature _CLIPPING    // 与Toggle名称对应
-            // 是否透明通道预乘
-            #pragma shader_feature _PREMULTIPLY_ALPHA
+            #pragma shader_feature _CLIPPING            // 与Toggle名称对应
+            #pragma shader_feature _PREMULTIPLY_ALPHA   // 是否透明通道预乘
             #pragma multi_compile_instancing
 	        #pragma vertex LitPassVertex
 	        #pragma fragment LitPassFragment
@@ -38,7 +37,22 @@ Shader "CustomeRP/Lit"
 	        ENDHLSL
         }
     }
+        SubShader
+    {
+        Pass{
+            Tags{ "LightMode" = "ShadowCaster" }
+            ColorMask 0     // 不写入任何颜色数据，但会进行深度测试，并把深度值写入深度缓冲区中
 
+	        HLSLPROGRAM
+            #pragma target 3.5
+            #pragma shader_feature _CLIPPING            // 与Toggle名称对应
+            #pragma multi_compile_instancing
+	        #pragma vertex ShadowCasterPassVertex
+	        #pragma fragment ShadowCasterPassFragment
+	        #include "ShadowCasterPass.hlsl"
+	        ENDHLSL
+        }
+    }
     
     CustomEditor "CustomShaderGUI"
 }
