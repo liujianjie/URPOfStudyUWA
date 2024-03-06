@@ -37,7 +37,7 @@ Shader "CustomeRP/Lit"
 	        ENDHLSL
         }
     }
-        SubShader
+    SubShader
     {
         Pass{
             Tags{ "LightMode" = "ShadowCaster" }

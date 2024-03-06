@@ -17,7 +17,7 @@ public class Shadows
     ShadowSettings settings;
 
     // 可投射阴影的定向光数量
-    const int maxShadowedDirectionalLightCount = 1;
+    const int maxShadowedDirectionalLightCount = 4;
 
     struct ShadowedDirectionalLight
     {
@@ -79,32 +79,53 @@ public class Shadows
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
         // 遍历所有方向光渲染阴影
+        //for (int i = 0; i < ShadowedDirectionalLightCount; i++)
+        //{
+        //    RenderDirectionalShadows(i, atlasSize);
+        //}
+        // 要分割的图块大小和数量
+        int split = ShadowedDirectionalLightCount <= 1 ? 1 : 2;
+        int tileSize = atlasSize / split;
+
         for (int i = 0; i < ShadowedDirectionalLightCount; i++)
         {
-            RenderDirectionalShadows(i, atlasSize);
+            RenderDirectionalShadows(i, split, tileSize);
         }
         buffer.EndSample(bufferName);
 
         ExecuteBuffer();
+
+
     }
     /// <summary>
     /// 渲染单个光源阴影
     /// </summary>
     /// <param name="index">投射阴影的灯光索引</param>
-    /// <param name="titleSize">阴影贴图再阴影图集中所占的图块大小</param>
-    void RenderDirectionalShadows(int index, int titleSize)
+    /// <param name="tileSize">阴影贴图再阴影图集中所占的图块大小</param>
+    void RenderDirectionalShadows(int index, int split, int tileSize)
     {
         ShadowedDirectionalLight light = ShadowedDirectionalLights[index];
         var shadowSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
         // 找出与光的方向匹配的视图与投影矩阵，并给我们一个裁剪空间的立方体，该立方体与包含光源阴影的摄像机的可见区域重叠
-        cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, 0, 1, Vector3.zero, titleSize, 0f,
+        cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, 0, 1, Vector3.zero, tileSize, 0f,
             out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
 
         shadowSettings.splitData = splitData;
 
+        // 设置渲染视口
+        SetTileViewport(index, split, tileSize);
+        // 设置视图投影矩阵
         buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix); // 应用获取的视图和投影矩阵
         ExecuteBuffer();
         context.DrawShadows(ref shadowSettings);
+    }
+    // 调整渲染视口来渲染单个图块
+    void SetTileViewport(int index, int split, float tileSize)
+    {
+        // 计算索引图块的偏移位置
+        Vector2 offset = new Vector2(index % split, index / split);
+        // 设置渲染视口，拆分多个图块
+        buffer.SetViewport(new Rect(offset.x * tileSize, offset.y * tileSize, tileSize, tileSize));
     }
     // 释放临时渲染纹理
     public void Cleanup()
