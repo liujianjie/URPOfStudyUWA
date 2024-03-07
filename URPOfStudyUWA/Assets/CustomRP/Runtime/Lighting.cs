@@ -21,10 +21,13 @@ public class Lighting
     static int dirLightCountId = Shader.PropertyToID("_DirectionalLightCount");
     static int dirLightColorId = Shader.PropertyToID("_DirectionalLightColors");
     static int dirLightDirectionId = Shader.PropertyToID("_DirectionalLightDirections");
+    static int dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
 
     // 存储可见光的颜色和方向
     static Vector4[] dirLightColors = new Vector4[maxDirLightCount];
     static Vector4[] dirLightDirections = new Vector4[maxDirLightCount];
+    // 存储阴影数据
+    static Vector4[] dirLightShadowData = new Vector4[maxDirLightCount];
 
     // 存储相机剔除后的结果
     CullingResults cullingResults;
@@ -74,6 +77,7 @@ public class Lighting
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
         buffer.SetGlobalVectorArray(dirLightColorId, dirLightColors);
         buffer.SetGlobalVectorArray(dirLightDirectionId, dirLightDirections);
+        buffer.SetGlobalVectorArray(dirLightShadowDataId, dirLightShadowData);
     }
 
     // 将场景主光源的光照颜色和方向传递给GPU
@@ -83,6 +87,8 @@ public class Lighting
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);// 第三列是光照方向，取反是来源方向
 
         shadows.ReserveDirectionalShadows(visibleLight.light, index);
+        // 存储阴影数据
+        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
 
         //Light light = RenderSettings.sun;
         //// 灯光的颜色我们再乘上光强作为最终颜色

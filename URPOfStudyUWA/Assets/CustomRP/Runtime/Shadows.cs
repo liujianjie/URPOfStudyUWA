@@ -49,8 +49,12 @@ public class Shadows
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
-    // 存储可见光的阴影数据
-    public void ReserveDirectionalShadows(Light light, int visibleLightIndex)
+    /// <summary>
+    /// 存储可见光的阴影数据,需要知道阴影所在的图块索引
+    /// </summary>
+    /// <param name="light"></param>
+    /// <param name="visibleLightIndex"></param>
+    public Vector2 ReserveDirectionalShadows(Light light, int visibleLightIndex)
     {
         // 存储可见光源的索引，前提是光源开启了阴影投射并且阴影强度不能为0
         // 是否在阴影最大投射距离内，有被该光源影响并且需要投射的物体存在，如果没有就不需要渲染该光源的阴影贴图了
@@ -58,7 +62,9 @@ public class Shadows
             && cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             ShadowedDirectionalLights[ShadowedDirectionalLightCount++] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex };
+            return new Vector2(light.shadowStrength, ShadowedDirectionalLightCount++);
         }
+        return Vector2.zero;
     }
     // 阴影渲染
     public void Render()
@@ -165,7 +171,7 @@ public class Shadows
         m.m22 = 0.5f * (m.m22 + m.m32);
         m.m23 = 0.5f * (m.m23 + m.m33);
 
-        // 设置矩阵坐标
+        // 设置矩阵坐标 - 图块的偏移和缩放也放进去
         float scale = 1f / split;
         m.m00 = (0.5f * (m.m00 + m.m30) + offset.x * m.m30) * scale;
         m.m01 = (0.5f * (m.m01 + m.m31) + offset.x * m.m31) * scale;
