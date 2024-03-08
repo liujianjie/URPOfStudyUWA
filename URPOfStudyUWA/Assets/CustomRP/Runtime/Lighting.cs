@@ -86,15 +86,9 @@ public class Lighting
         dirLightColors[index] = visibleLight.finalColor;
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);// 第三列是光照方向，取反是来源方向
 
-        shadows.ReserveDirectionalShadows(visibleLight.light, index);
         // 存储阴影数据
         dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
 
-        //Light light = RenderSettings.sun;
-        //// 灯光的颜色我们再乘上光强作为最终颜色
-        //buffer.SetGlobalVector(dirLightColorId, light.color.linear * light.intensity);  // 获取灯光的颜色要转到线性空间，并乘以光照强度
-        ////buffer.SetGlobalVector(dirLightColorId, Color.yellow * light.intensity);  // 获取灯光的颜色要转到线性空间，并乘以光照强度
-        //buffer.SetGlobalVector(dirLightDirectionId, -light.transform.forward);          // 正前方取反作为光照方向，用的是光线的来源方向，而不是光线的照射方向
     }
     // 释放阴影贴图RT内存
     public void Cleanup()

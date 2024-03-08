@@ -34,6 +34,7 @@ float3 GetLighting(Surface surfaceWS, BRDF brdf)
         color += GetLighting(surfaceWS, brdf, GetDirectionalLight(i, surfaceWS));
     }
     return color;
+
 }
 
 #endif

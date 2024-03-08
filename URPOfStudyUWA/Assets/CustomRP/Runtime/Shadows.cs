@@ -58,7 +58,8 @@ public class Shadows
     {
         // 存储可见光源的索引，前提是光源开启了阴影投射并且阴影强度不能为0
         // 是否在阴影最大投射距离内，有被该光源影响并且需要投射的物体存在，如果没有就不需要渲染该光源的阴影贴图了
-        if (ShadowedDirectionalLightCount < maxShadowedDirectionalLightCount && light.shadows != LightShadows.None && light.shadowStrength > 0f
+        if (ShadowedDirectionalLightCount < maxShadowedDirectionalLightCount 
+            && light.shadows != LightShadows.None && light.shadowStrength > 0f
             && cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             ShadowedDirectionalLights[ShadowedDirectionalLightCount++] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex };
@@ -155,21 +156,21 @@ public class Shadows
             m.m22 = -m.m22;
             m.m23 = -m.m23;
         }
-        // 设置矩阵坐标
-        m.m00 = 0.5f * (m.m00 + m.m30);
-        m.m01 = 0.5f * (m.m01 + m.m31);
-        m.m02 = 0.5f * (m.m02 + m.m32);
-        m.m03 = 0.5f * (m.m03 + m.m33);
+        // 设置矩阵坐标- 这里不要重复计算
+        //m.m00 = 0.5f * (m.m00 + m.m30);
+        //m.m01 = 0.5f * (m.m01 + m.m31);
+        //m.m02 = 0.5f * (m.m02 + m.m32);
+        //m.m03 = 0.5f * (m.m03 + m.m33);
 
-        m.m10 = 0.5f * (m.m10 + m.m30);
-        m.m11 = 0.5f * (m.m11 + m.m31);
-        m.m12 = 0.5f * (m.m12 + m.m32);
-        m.m13 = 0.5f * (m.m13 + m.m33);
+        //m.m10 = 0.5f * (m.m10 + m.m30);
+        //m.m11 = 0.5f * (m.m11 + m.m31);
+        //m.m12 = 0.5f * (m.m12 + m.m32);
+        //m.m13 = 0.5f * (m.m13 + m.m33);
 
-        m.m20 = 0.5f * (m.m20 + m.m30);
-        m.m21 = 0.5f * (m.m21 + m.m31);
-        m.m22 = 0.5f * (m.m22 + m.m32);
-        m.m23 = 0.5f * (m.m23 + m.m33);
+        //m.m20 = 0.5f * (m.m20 + m.m30);
+        //m.m21 = 0.5f * (m.m21 + m.m31);
+        //m.m22 = 0.5f * (m.m22 + m.m32);
+        //m.m23 = 0.5f * (m.m23 + m.m33);
 
         // 设置矩阵坐标 - 图块的偏移和缩放也放进去
         float scale = 1f / split;

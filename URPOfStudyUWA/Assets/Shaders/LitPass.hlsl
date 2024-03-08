@@ -79,8 +79,6 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.alpha = base.a;
     surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Metallic); // UnityPerMaterial,别写错成UnityPermaterial
     surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);
-    //surface.metallic = 0;
-    //surface.smoothness = 0;
     // 得到视角方向
     surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionCS);
     // 通过表面属性计算最终光照结果
