@@ -33,8 +33,11 @@ public class Shadows
     static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
 
     static int dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices");
-    // 存储阴影转换矩阵-为了找到对应在世界空间的阴影纹理坐标
-    static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount];
+    // 存储阴影转换矩阵-为了找到对应在世界空间的阴影纹理坐标。光源的级联阴影转换矩阵
+    static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
+
+    // 最大级联数量
+    const int maxCascades = 4;
 
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings)
@@ -63,7 +66,8 @@ public class Shadows
             && cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             ShadowedDirectionalLights[ShadowedDirectionalLightCount++] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex };
-            return new Vector2(light.shadowStrength, ShadowedDirectionalLightCount++);
+            // 返回阴影强度和阴影图块索引
+            return new Vector2(light.shadowStrength, settings.directional.cascadeCount * ShadowedDirectionalLightCount++);
         }
         return Vector2.zero;
     }
@@ -95,7 +99,9 @@ public class Shadows
         //    RenderDirectionalShadows(i, atlasSize);
         //}
         // 要分割的图块大小和数量
-        int split = ShadowedDirectionalLightCount <= 1 ? 1 : 2;
+
+        int tiles = ShadowedDirectionalLightCount * settings.directional.cascadeCount;
+        int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
         int tileSize = atlasSize / split;
 
         for (int i = 0; i < ShadowedDirectionalLightCount; i++)
@@ -119,21 +125,36 @@ public class Shadows
     {
         ShadowedDirectionalLight light = ShadowedDirectionalLights[index];
         var shadowSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
-        // 找出与光的方向匹配的视图与投影矩阵，并给我们一个裁剪空间的立方体，该立方体与包含光源阴影的摄像机的可见区域重叠
-        cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, 0, 1, Vector3.zero, tileSize, 0f,
-            out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
-
-        shadowSettings.splitData = splitData;
-
         // 设置渲染视口
         SetTileViewport(index, split, tileSize);
-        // 投影矩阵乘以视图矩阵，得到从世界空间到灯光空间的转换矩阵
-        dirShadowMatrices[index] = 
-            ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(index, split, tileSize), split);
-        // 设置视图投影矩阵
-        buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix); // 应用获取的视图和投影矩阵
-        ExecuteBuffer();
-        context.DrawShadows(ref shadowSettings);
+        // 得到级联阴影贴图需要的参数
+        int cascadeCount = settings.directional.cascadeCount;
+        int tileOffset = index * cascadeCount;
+        Vector3 ratios = settings.directional.CascadeRatios;
+        for(int i = 0; i < cascadeCount; i++)
+        {
+            // 找出与光的方向匹配的视图与投影矩阵，并给我们一个裁剪空间的立方体，该立方体与包含光源阴影的摄像机的可见区域重叠
+            cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, i, cascadeCount, ratios, tileSize, 0f,
+                out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
+
+            shadowSettings.splitData = splitData;
+
+            // 调整图块索引，它等于光源的图块片元加上级联的索引
+            int tileIndex = tileOffset + i;
+
+
+            // 投影矩阵乘以视图矩阵，得到从世界空间到灯光空间的转换矩阵
+            dirShadowMatrices[tileIndex] =
+                ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(tileIndex, split, tileSize), split);
+
+            // 设置视图投影矩阵
+            buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix); // 应用获取的视图和投影矩阵
+            ExecuteBuffer();
+            context.DrawShadows(ref shadowSettings);
+
+            //break;    
+        }
+
     }
     // 调整渲染视口来渲染单个图块
     Vector2 SetTileViewport(int index, int split, float tileSize)
