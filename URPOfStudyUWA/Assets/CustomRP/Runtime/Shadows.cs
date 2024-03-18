@@ -65,7 +65,7 @@ public class Shadows
             && light.shadows != LightShadows.None && light.shadowStrength > 0f
             && cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
-            ShadowedDirectionalLights[ShadowedDirectionalLightCount++] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex };
+            ShadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex };
             // 返回阴影强度和阴影图块索引
             return new Vector2(light.shadowStrength, settings.directional.cascadeCount * ShadowedDirectionalLightCount++);
         }
@@ -151,10 +151,8 @@ public class Shadows
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix); // 应用获取的视图和投影矩阵
             ExecuteBuffer();
             context.DrawShadows(ref shadowSettings);
-
-            //break;    
         }
-
+        //break;    
     }
     // 调整渲染视口来渲染单个图块
     Vector2 SetTileViewport(int index, int split, float tileSize)
