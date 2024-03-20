@@ -39,6 +39,11 @@ public class Shadows
     // 最大级联数量
     const int maxCascades = 4;
 
+    // 定义级联包围球和级联数量的着色器标志ID
+    static int cascadeCountId = Shader.PropertyToID("_CascadeCount");
+    static int cascadeCullingSpherersId = Shader.PropertyToID("_CascadeCullingSpheres");
+    static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades];
+    
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings)
     {
@@ -108,6 +113,11 @@ public class Shadows
         {
             RenderDirectionalShadows(i, split, tileSize);
         }
+        // 级联数量和包围球数据发送到GPU
+        buffer.SetGlobalInt(cascadeCountId, settings.directional.cascadeCount);
+        buffer.SetGlobalVectorArray(cascadeCullingSpherersId, cascadeCullingSpheres);
+
+        // 阴影转换矩阵传入GPU
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
 
         buffer.EndSample(bufferName);
@@ -136,6 +146,15 @@ public class Shadows
             // 找出与光的方向匹配的视图与投影矩阵，并给我们一个裁剪空间的立方体，该立方体与包含光源阴影的摄像机的可见区域重叠
             cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, i, cascadeCount, ratios, tileSize, 0f,
                 out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
+
+            // 拿到第一个光源的包围球数据 = 所有光源使用相同的级联
+            if (index == 0)
+            {
+                Vector4 cullingSphere = splitData.cullingSphere;
+                // 得到半径的平方值。这样可以避免在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
+                cullingSphere.w *= cullingSphere.w; 
+                cascadeCullingSpheres[i] = cullingSphere;
+            }
 
             shadowSettings.splitData = splitData;
 
