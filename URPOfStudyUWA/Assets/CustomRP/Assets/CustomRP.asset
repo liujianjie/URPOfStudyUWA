@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd16d70a2c7942c419483e0d083fafc0, type: 3}
   m_Name: CustomRP
   m_EditorClassIdentifier: 
-  useDynamicBatching: 0
-  useGPUInstancing: 0
-  useSRPBathcer: 0
+  useDynamicBatching: 1
+  useGPUInstancing: 1
+  useSRPBathcer: 1
   shadows:
     maxDistance: 30
     directional:

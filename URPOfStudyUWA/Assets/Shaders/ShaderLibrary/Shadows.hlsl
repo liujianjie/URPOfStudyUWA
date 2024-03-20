@@ -11,6 +11,9 @@ TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 SAMPLER_CMP(SHADOW_SAMPLER);
 
 CBUFFER_START(_CustomShadows)
+    // 级联数量和包围球数据
+    int _CascadeCount;
+    float4 _CascadeCullingSpheres[MAX_CASCADE_COUNT];
     // 阴影转换矩阵
     float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
 CBUFFER_END
@@ -21,7 +24,30 @@ struct DirectionalShadowData
     float strength;
     int tileIndex;
 };
+// 阴影数据
+struct ShadowData
+{
+    int cascadeIndex;
+};
+// 得到世界空间的表面阴影数据
+ShadowData GetShadowData(Surface surfaceWS)
+{
+    ShadowData data;
+    int i;
+    // 如果物体表面到球心的平方距离小于球体半径的平方，就说明在包围球内，得到合适的级联层级索引
+    for (i = 0; i < _CascadeCount; i++)
+    {
+        float4 sphere = _CascadeCullingSpheres[i];
+        float distanceSqr = DistanceSquared(surfaceWS.position, sphere.xyz);
+        if (distanceSqr < sphere.w)
+        {
+            break;
+        }
 
+    }
+    data.cascadeIndex = i; // 默认级联索引为0，使用第一个包围球
+    return data;
+}
 
 // 对阴影图集采样
 float SampleDirectionalShadowAtlas(float3 positionSTS)
