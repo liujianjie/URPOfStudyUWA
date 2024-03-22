@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657755, g: 0.4964127, b: 0.57481825, a: 1}
+  m_IndirectSpecularColor: {r: 0.43726116, g: 0.4850186, b: 0.5652903, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -407,13 +407,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 226625950}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.12163494, y: -0, z: -0, w: 0.99257493}
-  m_LocalPosition: {x: 0, y: 1.78, z: -10}
+  m_LocalRotation: {x: 0.23645626, y: -0, z: -0, w: 0.9716422}
+  m_LocalPosition: {x: 0, y: 2.97, z: -10.91}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 13.973, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 27.355, y: 0, z: 0}
 --- !u!1 &376099245
 GameObject:
   m_ObjectHideFlags: 0
@@ -686,13 +686,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 950122497}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.9063079, z: -0.42261827, w: 0}
+  m_LocalRotation: {x: -0, y: 0.898331, z: -0.43931928, w: 0}
   m_LocalPosition: {x: 1.2499555, y: 0.64625573, z: 4.790033}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1955202836}
-  m_LocalEulerAnglesHint: {x: 50, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 52.121, y: 180, z: 0}
 --- !u!108 &950122499
 Light:
   m_ObjectHideFlags: 0
@@ -842,13 +842,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1029104073}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.42261827, y: 0, z: 0, w: 0.9063079}
-  m_LocalPosition: {x: 1.249956, y: 0.64625573, z: 4.790033}
+  m_LocalRotation: {x: 0.7572214, y: -0, z: -0, w: 0.6531583}
+  m_LocalPosition: {x: -42, y: 0.64625573, z: 4.790033}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1955202836}
-  m_LocalEulerAnglesHint: {x: 50, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 98.44, y: 0, z: 0}
 --- !u!1 &1064058546
 GameObject:
   m_ObjectHideFlags: 0

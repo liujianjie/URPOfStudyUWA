@@ -42,6 +42,7 @@ public class Shadows
     // 定义级联包围球和级联数量的着色器标志ID
     static int cascadeCountId = Shader.PropertyToID("_CascadeCount");
     static int cascadeCullingSpherersId = Shader.PropertyToID("_CascadeCullingSpheres");
+    static int shadowDistanceId = Shader.PropertyToID("_ShadowDistance");
     static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades];
     
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
@@ -120,6 +121,8 @@ public class Shadows
         // 阴影转换矩阵传入GPU
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
 
+        buffer.SetGlobalFloat(shadowDistanceId, settings.maxDistance);
+
         buffer.EndSample(bufferName);
 
         ExecuteBuffer();
@@ -152,9 +155,10 @@ public class Shadows
             {
                 Vector4 cullingSphere = splitData.cullingSphere;
                 // 得到半径的平方值。这样可以避免在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
-                cullingSphere.w *= cullingSphere.w; 
+                cullingSphere.w *= cullingSphere.w;
                 cascadeCullingSpheres[i] = cullingSphere;
             }
+
 
             shadowSettings.splitData = splitData;
 

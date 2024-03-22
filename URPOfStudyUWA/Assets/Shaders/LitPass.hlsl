@@ -81,6 +81,8 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);
     // 得到视角方向
     surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionCS);
+    // 获取表面深度
+    surface.depth = -TransformWorldToView(input.positionWS).z;
     // 通过表面属性计算最终光照结果
     #if defined(_PREMULTIPLY_ALPHA)
         BRDF brdf = GetBRDF(surface, true);

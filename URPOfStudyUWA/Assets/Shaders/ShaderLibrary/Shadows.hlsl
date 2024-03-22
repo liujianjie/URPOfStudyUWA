@@ -16,6 +16,8 @@ CBUFFER_START(_CustomShadows)
     float4 _CascadeCullingSpheres[MAX_CASCADE_COUNT];
     // 阴影转换矩阵
     float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
+    // 阴影最大距离
+    float _ShadowDistance;
 CBUFFER_END
 
 // 阴影的数据信息
@@ -27,12 +29,16 @@ struct DirectionalShadowData
 // 阴影数据
 struct ShadowData
 {
+    // 级联索引
     int cascadeIndex;
+    // 是否采样阴影的标志
+    float strength;
 };
 // 得到世界空间的表面阴影数据
 ShadowData GetShadowData(Surface surfaceWS)
 {
     ShadowData data;
+    data.strength = surfaceWS.depth < _ShadowDistance ? 1.0 : 0.0;
     int i;
     // 如果物体表面到球心的平方距离小于球体半径的平方，就说明在包围球内，得到合适的级联层级索引
     for (i = 0; i < _CascadeCount; i++)
@@ -43,7 +49,11 @@ ShadowData GetShadowData(Surface surfaceWS)
         {
             break;
         }
-
+    }
+    // 如果超出最后一个级联的范围，标志符设置为0，不对阴影进行采样
+    if (i == _CascadeCount)
+    {
+        data.strength = 0.0;            // 不知道为什么，这里一直返回0，导致阴影一直不显示
     }
     data.cascadeIndex = i; // 默认级联索引为0，使用第一个包围球
     return data;

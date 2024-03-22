@@ -26,8 +26,8 @@ struct Light
 DirectionalShadowData GetDirectinalShadowData(int lightIndex, ShadowData shadowData)
 {
     DirectionalShadowData data;
-    data.strength = _DirectionalLightShadowData[lightIndex].x;
-    //data.tileIndex = _DirectionalLightShadowData[lightIndex].y;
+    //data.strength = _DirectionalLightShadowData[lightIndex].x;
+    data.strength = _DirectionalLightShadowData[lightIndex].x * shadowData.strength;      // 剔除最后一个级联范围外的所有阴影
     data.tileIndex = _DirectionalLightShadowData[lightIndex].y + shadowData.cascadeIndex;   // 光源阴影图块索引 + 级联索引 = 最终的图块索引
     return data;
 }
@@ -42,12 +42,13 @@ Light GetDirectionalLight(int index, Surface surfaceWS, ShadowData shadowData)
 {
     Light light;
     light.color = _DirectionalLightColors[index].rgb;
-    // light.color = float3(0.8, 0.5, 1);
+    //light.color = float3(shadowData.strength, shadowData.strength, shadowData.strength);
     light.direction = _DirectionalLightDirections[index].xyz;
     // 得到阴影数据
     DirectionalShadowData dirShadowData = GetDirectinalShadowData(index, shadowData);
     // 得到阴影衰减
     light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, surfaceWS);
+    //light.attenuation = shadowData.cascadeIndex / 4;
     return light;
 }
 
