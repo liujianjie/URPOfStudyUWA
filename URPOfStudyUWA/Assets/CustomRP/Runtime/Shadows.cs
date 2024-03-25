@@ -175,8 +175,14 @@ public class Shadows
 
             // 设置视图投影矩阵
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix); // 应用获取的视图和投影矩阵
+
+            // 设置深度偏差
+            //buffer.SetGlobalDepthBias(50000f, 0f);
+            //buffer.SetGlobalDepthBias(0, 3f);
+            // 绘制阴影
             ExecuteBuffer();
             context.DrawShadows(ref shadowSettings);
+            //buffer.SetGlobalDepthBias(0f, 0f);
         }
         //break;    
     }
