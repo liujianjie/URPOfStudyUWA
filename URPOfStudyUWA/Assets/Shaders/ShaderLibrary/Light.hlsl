@@ -23,7 +23,7 @@ struct Light
     float attenuation;  // 光源的阴影衰减属性
 };
 // 获取方向光的阴影数据
-DirectionalShadowData GetDirectinalShadowData(int lightIndex, ShadowData shadowData)
+DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadowData)
 {
     DirectionalShadowData data;
     //data.strength = _DirectionalLightShadowData[lightIndex].x;
@@ -45,7 +45,7 @@ Light GetDirectionalLight(int index, Surface surfaceWS, ShadowData shadowData)
     //light.color = float3(shadowData.strength, shadowData.strength, shadowData.strength);
     light.direction = _DirectionalLightDirections[index].xyz;
     // 得到阴影数据
-    DirectionalShadowData dirShadowData = GetDirectinalShadowData(index, shadowData);
+    DirectionalShadowData dirShadowData = GetDirectionalShadowData(index, shadowData);
     // 得到阴影衰减
     light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, surfaceWS);
     //light.attenuation = shadowData.cascadeIndex / 4;

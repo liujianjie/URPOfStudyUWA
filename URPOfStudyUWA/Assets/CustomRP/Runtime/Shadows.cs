@@ -42,7 +42,9 @@ public class Shadows
     // 定义级联包围球和级联数量的着色器标志ID
     static int cascadeCountId = Shader.PropertyToID("_CascadeCount");
     static int cascadeCullingSpherersId = Shader.PropertyToID("_CascadeCullingSpheres");
-    static int shadowDistanceId = Shader.PropertyToID("_ShadowDistance");
+    //static int shadowDistanceId = Shader.PropertyToID("_ShadowDistance");
+    // 阴影过度距离
+    static int shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade");
     static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades];
     
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
@@ -121,7 +123,8 @@ public class Shadows
         // 阴影转换矩阵传入GPU
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
 
-        buffer.SetGlobalFloat(shadowDistanceId, settings.maxDistance);
+        //buffer.SetGlobalFloat(shadowDistanceId, settings.maxDistance);
+        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade));
 
         buffer.EndSample(bufferName);
 

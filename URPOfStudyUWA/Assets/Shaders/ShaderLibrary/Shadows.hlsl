@@ -17,7 +17,9 @@ CBUFFER_START(_CustomShadows)
     // 阴影转换矩阵
     float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
     // 阴影最大距离
-    float _ShadowDistance;
+    //float _ShadowDistance;
+    // 阴影过渡距离
+    float4 _ShadowDistanceFade;
 CBUFFER_END
 
 // 阴影的数据信息
@@ -34,11 +36,19 @@ struct ShadowData
     // 是否采样阴影的标志
     float strength;
 };
+// 公式计算阴影过度时的强度
+float FadedShadowStrength(float distance, float scale, float fade)
+{
+    return saturate((1.0 - distance * scale) * fade);
+}
 // 得到世界空间的表面阴影数据
 ShadowData GetShadowData(Surface surfaceWS)
 {
     ShadowData data;
-    data.strength = surfaceWS.depth < _ShadowDistance ? 1.0 : 0.0;
+    //data.strength = 1.0;
+    //data.strength = surfaceWS.depth < _ShadowDistance ? 1.0 : 0.0;
+    // 通过公式得到有线性过度的阴影强度
+    data.strength = FadedShadowStrength(surfaceWS.depth, _ShadowDistanceFade.x, _ShadowDistanceFade.y);
     int i;
     // 如果物体表面到球心的平方距离小于球体半径的平方，就说明在包围球内，得到合适的级联层级索引
     for (i = 0; i < _CascadeCount; i++)
