@@ -46,7 +46,11 @@ public class Shadows
     // 阴影过度距离
     static int shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade");
     static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades];
-    
+
+    // 级联数据
+    static int cascadeDataId = Shader.PropertyToID("_CascadeData");
+    static Vector4[] cascadeData = new Vector4[maxCascades];
+
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings)
     {
@@ -126,12 +130,17 @@ public class Shadows
         //buffer.SetGlobalFloat(shadowDistanceId, settings.maxDistance);
         buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade));
 
+        // 级联数据发送GPU
+        buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
+        // 阴影转换矩阵传入GPU
+        buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
+
         buffer.EndSample(bufferName);
 
         ExecuteBuffer();
-
-
     }
+
+    
     /// <summary>
     /// 渲染单个光源阴影
     /// </summary>
@@ -156,10 +165,8 @@ public class Shadows
             // 拿到第一个光源的包围球数据 = 所有光源使用相同的级联
             if (index == 0)
             {
-                Vector4 cullingSphere = splitData.cullingSphere;
-                // 得到半径的平方值。这样可以避免在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
-                cullingSphere.w *= cullingSphere.w;
-                cascadeCullingSpheres[i] = cullingSphere;
+                // 设置级联数据
+                SetCascadeData(i, splitData.cullingSphere, tileSize);
             }
 
 
@@ -185,6 +192,16 @@ public class Shadows
             //buffer.SetGlobalDepthBias(0f, 0f);
         }
         //break;    
+    }
+    // 设置级联数据
+    void SetCascadeData(int index, Vector4 cullingSphere, float tileSize)
+    {
+        // 包围球直径除以阴影图块尺寸 = 纹理像素大小
+        float texelSize = 2f * cullingSphere.w / tileSize;
+        // 得到半径的平方值。这样可以避免在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
+        cullingSphere.w *= cullingSphere.w;
+        cascadeCullingSpheres[index] = cullingSphere;
+        cascadeData[index] = new Vector4(1f / cullingSphere.w, texelSize * 1.4142136f);
     }
     // 调整渲染视口来渲染单个图块
     Vector2 SetTileViewport(int index, int split, float tileSize)
