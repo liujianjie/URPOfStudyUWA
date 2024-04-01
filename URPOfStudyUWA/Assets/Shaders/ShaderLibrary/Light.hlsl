@@ -28,7 +28,9 @@ DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadow
     DirectionalShadowData data;
     //data.strength = _DirectionalLightShadowData[lightIndex].x;
     data.strength = _DirectionalLightShadowData[lightIndex].x * shadowData.strength;      // 剔除最后一个级联范围外的所有阴影
-    data.tileIndex = _DirectionalLightShadowData[lightIndex].y + shadowData.cascadeIndex;   // 光源阴影图块索引 + 级联索引 = 最终的图块索引
+    data.tileIndex = _DirectionalLightShadowData[lightIndex].y + shadowData.cascadeIndex; // 光源阴影图块索引 + 级联索引 = 最终的图块索引
+    // 获取灯光的法线偏差值
+    data.normalBias = _DirectionalLightShadowData[lightIndex].z;
     return data;
 }
 
