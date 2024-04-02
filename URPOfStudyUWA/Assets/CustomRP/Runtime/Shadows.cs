@@ -24,6 +24,8 @@ public class Shadows
         public int visibleLightIndex;
         // 斜度比例偏差值
         public float slopeScaleBias;
+        // 阴影视椎体近裁剪平面偏移
+        public float nearPlaneOffset;
     }
     // 存储可投射阴影的可见光源的索引
     ShadowedDirectionalLight[] ShadowedDirectionalLights = new ShadowedDirectionalLight[maxShadowedDirectionalLightCount];
@@ -79,7 +81,7 @@ public class Shadows
             && light.shadows != LightShadows.None && light.shadowStrength > 0f
             && cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
-            ShadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex, slopeScaleBias = light.shadowBias };
+            ShadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex, slopeScaleBias = light.shadowBias, nearPlaneOffset = light.shadowNearPlane };
             // 返回阴影强度和阴影图块索引
             return new Vector3(light.shadowStrength, settings.directional.cascadeCount * ShadowedDirectionalLightCount++, light.shadowNormalBias);
         }
@@ -161,7 +163,7 @@ public class Shadows
         for(int i = 0; i < cascadeCount; i++)
         {
             // 找出与光的方向匹配的视图与投影矩阵，并给我们一个裁剪空间的立方体，该立方体与包含光源阴影的摄像机的可见区域重叠
-            cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, i, cascadeCount, ratios, tileSize, 0f,
+            cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(light.visibleLightIndex, i, cascadeCount, ratios, tileSize, light.nearPlaneOffset,
                 out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
 
             // 拿到第一个光源的包围球数据 = 所有光源使用相同的级联
