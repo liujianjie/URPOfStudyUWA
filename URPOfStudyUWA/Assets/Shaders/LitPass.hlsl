@@ -90,6 +90,9 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
         BRDF brdf = GetBRDF(surface); // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
     #endif
     float3 color = GetLighting(surface, brdf);  // 然后用BRDF数据计算光照结果
+#if defined(DIRECTIONAL_FILTER_SETUP)
+    //color = float3(0.5, 0.5, 0.5);
+#endif
     return float4(color, surface.alpha);
 }
 

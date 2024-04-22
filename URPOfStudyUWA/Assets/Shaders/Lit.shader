@@ -29,6 +29,10 @@ Shader "CustomeRP/Lit"
             #pragma target 3.5
             #pragma shader_feature _CLIPPING            // 与Toggle名称对应
             #pragma shader_feature _PREMULTIPLY_ALPHA   // 是否透明通道预乘
+            #pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
+            //#pragma multi_compile _DIRECTIONAL_PCF3
+            //#pragma multi_compile _DIRECTIONAL_PCF5
+            //#pragma multi_compile _DIRECTIONAL_PCF7
             #pragma multi_compile_instancing
 	        #pragma vertex LitPassVertex
 	        #pragma fragment LitPassFragment
@@ -46,6 +50,10 @@ Shader "CustomeRP/Lit"
 	        HLSLPROGRAM
             #pragma target 3.5
             #pragma shader_feature _CLIPPING            // 与Toggle名称对应
+            #pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
+            // #pragma multi_compile _DIRECTIONAL_PCF3
+            // #pragma multi_compile _DIRECTIONAL_PCF5
+            // #pragma multi_compile _DIRECTIONAL_PCF7
             #pragma multi_compile_instancing
 	        #pragma vertex ShadowCasterPassVertex
 	        #pragma fragment ShadowCasterPassFragment

@@ -55,6 +55,30 @@ public class Shadows
     static int cascadeDataId = Shader.PropertyToID("_CascadeData");
     static Vector4[] cascadeData = new Vector4[maxCascades];
 
+    // PCF滤波模式
+    static string[] directionalFilterKeywords =
+    {
+        "_DIRECTIONAL_PCF3",
+        "_DIRECTIONAL_PCF5",
+        "_DIRECTIONAL_PCF7"
+    };
+    static int shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize");
+    // 设置关键字开启哪种PCF滤波模式
+    void SetKeywords()
+    {
+        int enabledIndex = (int)settings.directional.filter - 1;
+        for(int i = 0; i < directionalFilterKeywords.Length; i++)
+        {
+            if (i == enabledIndex)
+            {
+                buffer.EnableShaderKeyword(directionalFilterKeywords[i]);
+            }
+            else
+            {
+                buffer.DisableShaderKeyword(directionalFilterKeywords[i]);
+            }
+        }
+    }
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings)
     {
@@ -98,6 +122,7 @@ public class Shadows
     // 渲染定向光阴影
     void RenderDirectionalShadows()
     {
+
         // 创建rendertexture，并指定该类型是阴影贴图
         int atlasSize = (int)settings.directional.atlasSize;
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
@@ -109,17 +134,12 @@ public class Shadows
 
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
-        // 遍历所有方向光渲染阴影
-        //for (int i = 0; i < ShadowedDirectionalLightCount; i++)
-        //{
-        //    RenderDirectionalShadows(i, atlasSize);
-        //}
         // 要分割的图块大小和数量
-
         int tiles = ShadowedDirectionalLightCount * settings.directional.cascadeCount;
         int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
         int tileSize = atlasSize / split;
 
+        // 遍历所有方向光渲染阴影
         for (int i = 0; i < ShadowedDirectionalLightCount; i++)
         {
             RenderDirectionalShadows(i, split, tileSize);
@@ -138,6 +158,12 @@ public class Shadows
         buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
         // 阴影转换矩阵传入GPU
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
+
+        // 设置关键字
+        SetKeywords();
+        Debug.Log("shadowAtlasSizeId "+ shadowAtlasSizeId);
+        // 传递图集大小和纹素大小
+        buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
 
         buffer.EndSample(bufferName);
 
@@ -202,12 +228,23 @@ public class Shadows
     // 设置级联数据
     void SetCascadeData(int index, Vector4 cullingSphere, float tileSize)
     {
+        //// 包围球直径除以阴影图块尺寸 = 纹理像素大小
+        //float texelSize = 2f * cullingSphere.w / tileSize;
+        //// 得到半径的平方值。这样可以避免在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
+        //cullingSphere.w *= cullingSphere.w;
+        //cascadeCullingSpheres[index] = cullingSphere;
+        //cascadeData[index] = new Vector4(1f / cullingSphere.w, texelSize * 1.4142136f);
+
         // 包围球直径除以阴影图块尺寸 = 纹理像素大小
         float texelSize = 2f * cullingSphere.w / tileSize;
-        // 得到半径的平方值。这样可以避免在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
+        float filterSize = texelSize * ((float)settings.directional.filter + 1f);
+
+        // 得到半径的平方值。这样可以避免x在着色器中进行平方运算。像素点到包围球的距离小于半径的平方值就在包围球内
+        cullingSphere.w -= filterSize;
         cullingSphere.w *= cullingSphere.w;
         cascadeCullingSpheres[index] = cullingSphere;
-        cascadeData[index] = new Vector4(1f / cullingSphere.w, texelSize * 1.4142136f);
+
+        cascadeData[index] = new Vector4(1f / cullingSphere.w, filterSize * 1.4142136f);
     }
     // 调整渲染视口来渲染单个图块
     Vector2 SetTileViewport(int index, int split, float tileSize)
