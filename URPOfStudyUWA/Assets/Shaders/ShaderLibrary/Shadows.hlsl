@@ -57,6 +57,8 @@ struct ShadowData
     int cascadeIndex;
     // 是否采样阴影的标志
     float strength;
+    // 混合级联
+    float cascadeBlend;
 };
 
 
@@ -69,6 +71,7 @@ float FadedShadowStrength(float distance, float scale, float fade)
 ShadowData GetShadowData(Surface surfaceWS)
 {
     ShadowData data;
+    data.cascadeBlend = 1.0;
     //data.strength = 1.0;
     //data.strength = surfaceWS.depth < _ShadowDistance ? 1.0 : 0.0;
     // 通过公式得到有线性过度的阴影强度
@@ -82,6 +85,17 @@ ShadowData GetShadowData(Surface surfaceWS)
         distanceSqr = DistanceSquared(surfaceWS.position, sphere.xyz);
         if (distanceSqr < sphere.w)
         {
+            // 计算级联阴影的过度强度
+            float fade = FadedShadowStrength(distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z);
+            // 如果对象处在最后一个级联范围中
+            if (i == _CascadeCount - 1)
+            {
+                data.strength *= fade;
+            }
+            else
+            {
+                data.cascadeBlend = 1;
+            }
             break;
         }
     }
@@ -140,7 +154,13 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
     float3 positionSTS = mul(_DirectionalShadowMatrices[directional.tileIndex], float4(surfaceWS.position + normalBias, 1.0)).xyz;
     
     float shadow = FilterDirectionalShadow(positionSTS);
-    
+    // 如果级联混合小于1代表在级联层级过度区域中，必须从下一个级联中采样并在两个值之间进行插值
+    if (global.cascadeBlend < 1.0)
+    {
+        normalBias = surfaceWS.normal * (directional.normalBias * _CascadeData[global.cascadeIndex + 1].y);
+        positionSTS = mul(_DirectionalShadowMatrices[directional.tileIndex + 1], float4(surfaceWS.position + normalBias, 1.0)).xyz;
+        shadow = lerp(FilterDirectionalShadow(positionSTS), shadow, global.cascadeBlend);
+    }
     // 最终阴影衰减值是阴影强度和衰减因子的插值
     return lerp(1.0, shadow, directional.strength);
 }
