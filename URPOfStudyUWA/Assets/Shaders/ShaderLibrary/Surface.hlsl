@@ -13,6 +13,7 @@ struct Surface
     float3 viewDirection;
     // 表面深度。阴影的最大距离是基于视图空间的深度，而不是与相机的距离
     float depth;
+    float dither;
 };
 
 #endif

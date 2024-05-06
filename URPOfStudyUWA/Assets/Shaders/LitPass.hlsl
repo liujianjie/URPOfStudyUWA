@@ -79,6 +79,8 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.alpha = base.a;
     surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Metallic); // UnityPerMaterial,别写错成UnityPermaterial
     surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);
+    // 计算抖动值
+    surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
     // 得到视角方向
     surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionCS);
     // 获取表面深度

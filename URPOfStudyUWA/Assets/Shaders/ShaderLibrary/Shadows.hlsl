@@ -100,11 +100,22 @@ ShadowData GetShadowData(Surface surfaceWS)
         }
     }
     // 如果超出最后一个级联的范围，标志符设置为0，不对阴影进行采样
-    if (i == _CascadeCount - 1)
+    if (i == _CascadeCount)
     {
-        //data.strength = 0.0;            // 不知道为什么，这里一直返回0，导致阴影一直不显示
-        data.strength *= FadedShadowStrength(distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z);
+        data.strength = 0.0;            // 不知道为什么，这里一直返回0，导致阴影一直不显示
     }
+    // 抖动模式，且不在最后一个级联，且当级联混合值小于抖动值时，则跳到下一个级联：为了级联过度
+#if defined(_CASCADE_BLEND_DITHER)
+    else if (data.cascadeBlend < surfaceWS.dither)
+    {
+        i += 1;
+    }
+#endif
+
+#if !defined(_CASCADE_BLEND_SOFT)
+    data.cascadeBlend = 1.0f;
+#endif
+
     data.cascadeIndex = i; // 默认级联索引为0，使用第一个包围球
     return data;
 }
