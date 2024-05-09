@@ -207,6 +207,7 @@ public class Shadows
         int cascadeCount = settings.directional.cascadeCount;
         int tileOffset = index * cascadeCount;
         Vector3 ratios = settings.directional.CascadeRatios;
+        float cullingFactor = Mathf.Max(0f, 0.8f - settings.directional.cascadeFade);
         for (int i = 0; i < cascadeCount; i++)
         {
             // 找出与光的方向匹配的视图与投影矩阵，并给我们一个裁剪空间的立方体，该立方体与包含光源阴影的摄像机的可见区域重叠
@@ -219,7 +220,8 @@ public class Shadows
                 // 设置级联数据
                 SetCascadeData(i, splitData.cullingSphere, tileSize);
             }
-
+            // 剔除偏差
+            splitData.shadowCascadeBlendCullingFactor = cullingFactor;
             shadowSettings.splitData = splitData;
 
             // 调整图块索引，它等于光源的图块片元加上级联的索引
