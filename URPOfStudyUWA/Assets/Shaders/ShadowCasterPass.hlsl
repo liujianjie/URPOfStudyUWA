@@ -62,6 +62,9 @@ void ShadowCasterPassFragment(Varyings input)
     #if defined(_SHADOWS_CLIP)
         // 透明度低于阙值的片元进行丢弃
         clip(base.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Cutoff));
+    #elif defined(_SHADOWS_DITHER)
+        float dither = InterleavedGradientNoise(input.positionCS.xy, 0);
+        clip(base.a -  dither);
     #endif
 }
 #endif
