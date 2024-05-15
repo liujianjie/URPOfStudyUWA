@@ -31,6 +31,24 @@ Shader "CustomeRP/Unlit"
 	        ENDHLSL
         }
     }
+    SubShader
+    {
+        Pass{
+            Tags{ "LightMode" = "ShadowCaster" }
+            ColorMask 0     // 不写入任何颜色数据，但会进行深度测试，并把深度值写入深度缓冲区中
+
+	        HLSLPROGRAM
+            #pragma target 3.5
+            #pragma shader_feature _CLIPPING            // 与Toggle名称对应
+            #pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
+            #pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
+            #pragma multi_compile_instancing
+	        #pragma vertex ShadowCasterPassVertex
+	        #pragma fragment ShadowCasterPassFragment
+	        #include "ShadowCasterPass.hlsl"
+	        ENDHLSL
+        }
+    }
     
     CustomEditor "CustomShaderGUI"
 }

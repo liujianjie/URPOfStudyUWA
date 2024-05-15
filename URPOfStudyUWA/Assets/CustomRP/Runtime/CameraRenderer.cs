@@ -6,9 +6,9 @@ using UnityEngine.Rendering;
 
 public partial class CameraRenderer
 {
-    ScriptableRenderContext context;
-    Camera camera;
-    Lighting lighting = new Lighting();
+    private ScriptableRenderContext context;
+    private Camera camera;
+    private Lighting lighting = new Lighting();
 
     public void Render(ScriptableRenderContext context, Camera camera,
         bool useDynamicBatching, bool useGPUInstancing,
@@ -32,7 +32,7 @@ public partial class CameraRenderer
 
         // 光源数据和阴影数据发送到GPU计算光照
         lighting.Setup(context, cullingResults, shadowSettings);    // 阴影应在之前
-        buffer.EndSample(SampleName);   // 
+        buffer.EndSample(SampleName);   //
 
         Setup();
 
@@ -46,10 +46,11 @@ public partial class CameraRenderer
         lighting.Cleanup();
         Submit();
     }
+
     /// <summary>
     /// 设置相机的属性和矩阵
     /// </summary>
-    void Setup()
+    private void Setup()
     {
         // 设置相机的属性和矩阵
         context.SetupCameraProperties(camera);
@@ -58,28 +59,28 @@ public partial class CameraRenderer
         CameraClearFlags flags = camera.clearFlags;
 
         // 设置相机的清除状态
-        buffer.ClearRenderTarget(flags <= CameraClearFlags.Depth, flags == CameraClearFlags.Color, 
+        buffer.ClearRenderTarget(flags <= CameraClearFlags.Depth, flags == CameraClearFlags.Color,
             flags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.white);
         // 为保证下一帧渲染正确，需要清除上一帧的渲染结果
         //buffer.ClearRenderTarget(true, true, Color.clear);
-
     }
+
     /// <summary>
     /// 执行缓冲区命令：使用和清除缓冲区通常是配套使用的
     /// </summary>
-    void ExecuteBuffer()
+    private void ExecuteBuffer()
     {
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
-    static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
-    static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
 
+    private static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+    private static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
 
     /// <summary>
     /// 绘制可见物
     /// </summary>
-    void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
+    private void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
     {
         // 设置绘制顺序和指定渲染相机
         var sortingSettings = new SortingSettings(camera)
@@ -112,29 +113,33 @@ public partial class CameraRenderer
         // 3.绘制透明物体
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
     }
+
     /// <summary>
     /// 提交缓冲区渲染命令
     /// </summary>
-    void Submit()
+    private void Submit()
     {
         buffer.EndSample(SampleName);
         ExecuteBuffer();
         context.Submit();       // 提交缓冲区渲染命令才进行这一帧的渲染
     }
+
     // 缓冲区，用来绘制场景的其它几何图像
-    const string bufferName = "My Render Camera";
-    CommandBuffer buffer = new CommandBuffer
+    private const string bufferName = "My Render Camera";
+
+    private CommandBuffer buffer = new CommandBuffer
     {
         name = bufferName
     };
 
     // 存储剔除后的结果数据
-    CullingResults cullingResults;
+    private CullingResults cullingResults;
+
     /// <summary>
     /// 剔除
     /// </summary>
     /// <returns></returns>
-    bool Cull(float maxShadowDistance)
+    private bool Cull(float maxShadowDistance)
     {
         // 获取相机的剔除参数
         if (camera.TryGetCullingParameters(out ScriptableCullingParameters p))
@@ -147,7 +152,4 @@ public partial class CameraRenderer
         }
         return false;
     }
-
-
-    
 }

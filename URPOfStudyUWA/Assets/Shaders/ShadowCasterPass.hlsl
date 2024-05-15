@@ -66,5 +66,6 @@ void ShadowCasterPassFragment(Varyings input)
         float dither = InterleavedGradientNoise(input.positionCS.xy, 0);
         clip(base.a -  dither);
     #endif
+
 }
 #endif
