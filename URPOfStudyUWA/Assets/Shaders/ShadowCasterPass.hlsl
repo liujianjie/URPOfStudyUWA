@@ -1,7 +1,7 @@
 #ifndef CUSTOM_SHADOW_CASTER_PASS_INCLUDED
 #define CUSTOM_SHADOW_CASTER_PASS_INCLUDED
 
-#include "ShaderLibrary/Common.hlsl"
+#include "../ShaderLibrary/Common.hlsl"
 
 // 纹理采样器
 TEXTURE2D(_BaseMap);            // 定义一张纹理
