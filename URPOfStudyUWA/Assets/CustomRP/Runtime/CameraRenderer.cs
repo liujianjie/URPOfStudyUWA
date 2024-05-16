@@ -63,6 +63,8 @@ public partial class CameraRenderer
             flags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.white);
         // 为保证下一帧渲染正确，需要清除上一帧的渲染结果
         //buffer.ClearRenderTarget(true, true, Color.clear);
+        buffer.BeginSample(SampleName);
+        ExecuteBuffer();
     }
 
     /// <summary>
@@ -92,13 +94,14 @@ public partial class CameraRenderer
         {
             // 设置渲染时批处理的使用状态
             enableDynamicBatching = useDynamicBatching,
-            enableInstancing = useGPUInstancing
+            enableInstancing = useGPUInstancing,
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
         };
         // 渲染customelit表示的pass块
         drawingSettings.SetShaderPassName(1, litShaderTagId);
 
         // 设置哪些类型的渲染队列可以被绘制
-        var filteringSettings = new FilteringSettings(RenderQueueRange.all);
+        var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
 
         // 1.绘制不透明物体
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
@@ -141,8 +144,9 @@ public partial class CameraRenderer
     /// <returns></returns>
     private bool Cull(float maxShadowDistance)
     {
+        ScriptableCullingParameters p;
         // 获取相机的剔除参数
-        if (camera.TryGetCullingParameters(out ScriptableCullingParameters p))
+        if (camera.TryGetCullingParameters(out p))
         {
             // 得到最大阴影距离，和相机远截面作比较，取最小的那个作为阴影距离
             p.shadowDistance = Mathf.Min(maxShadowDistance, camera.farClipPlane);
