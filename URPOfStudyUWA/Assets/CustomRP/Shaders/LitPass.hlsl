@@ -6,7 +6,7 @@
 #include "../ShaderLibrary/Shadows.hlsl"
 #include "../ShaderLibrary/Light.hlsl"
 #include "../ShaderLibrary/BRDF.hlsl"
-#include "../ShaderLibrary/GL.hlsl"
+#include "../ShaderLibrary/GI.hlsl"
 #include "../ShaderLibrary/Lighting.hlsl"
 
 // 所有材质的属性我们需要在常量缓冲区里定义
@@ -33,7 +33,8 @@ struct Attributes
     float3 positionOS : POSITION;
     float2 baseUV : TEXCOORD;
     float3 normalOS : NORMAL;   // 表面法线
-    UNITY_VERTEX_INPUT_INSTANCE_ID
+    GI_ATTRIBUTE_DATA           // 宏，光照贴图
+    UNITY_VERTEX_INPUT_INSTANCE_ID  
 };
 // 用作片元函数的输入参数
 struct Varyings
@@ -42,6 +43,7 @@ struct Varyings
     float3 positionWS : VAR_POSITION;// 顶点在世界空间的位置
     float2 baseUV : VAR_BASE_UV;
     float3 normalWS : NORMAL; // 世界法线
+    GI_VARYINGS_DATA
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -51,6 +53,7 @@ Varyings LitPassVertex(Attributes input)
     Varyings output;
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
+    TRANSFER_GI_DATA(input, output); // 传递光照贴图数据
     output.positionWS = TransformObjectToWorld(input.positionOS);
     output.positionCS = TransformWorldToHClip(output.positionWS);
     // 计算世界空间的法线
@@ -93,7 +96,7 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
         BRDF brdf = GetBRDF(surface); // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
     #endif
     // 获取全局照明数据
-    GI gi = GetGI(0.0);     // 
+    GI gi = GetGI(GI_FRAGMENT_DATA(input)); // 
     float3 color = GetLighting(surface, brdf, gi);  // 然后用BRDF数据计算光照结果
 #if defined(DIRECTIONAL_FILTER_SETUP)
     //color = float3(0.5, 0.5, 0.5);
