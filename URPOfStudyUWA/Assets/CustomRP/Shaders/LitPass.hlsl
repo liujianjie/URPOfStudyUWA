@@ -6,6 +6,7 @@
 #include "../ShaderLibrary/Shadows.hlsl"
 #include "../ShaderLibrary/Light.hlsl"
 #include "../ShaderLibrary/BRDF.hlsl"
+#include "../ShaderLibrary/GL.hlsl"
 #include "../ShaderLibrary/Lighting.hlsl"
 
 // 所有材质的属性我们需要在常量缓冲区里定义
@@ -91,7 +92,9 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     #else
         BRDF brdf = GetBRDF(surface); // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
     #endif
-    float3 color = GetLighting(surface, brdf);  // 然后用BRDF数据计算光照结果
+    // 获取全局照明数据
+    GI gi = GetGI(0.0);     // 
+    float3 color = GetLighting(surface, brdf, gi);  // 然后用BRDF数据计算光照结果
 #if defined(DIRECTIONAL_FILTER_SETUP)
     //color = float3(0.5, 0.5, 0.5);
 #endif

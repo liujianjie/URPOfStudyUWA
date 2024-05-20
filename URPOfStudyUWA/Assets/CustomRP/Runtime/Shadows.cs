@@ -183,7 +183,7 @@ public class Shadows
         // 设置关键字
         SetKeywords(directionalFilterKeywords, (int)settings.directional.filter - 1);
         SetKeywords(cascadeBlendKeywords, (int)settings.directional.cascadeBlend - 1);
-        Debug.Log("shadowAtlasSizeId " + shadowAtlasSizeId);
+        //Debug.Log("shadowAtlasSizeId " + shadowAtlasSizeId);
         // 传递图集大小和纹素大小
         buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
 
