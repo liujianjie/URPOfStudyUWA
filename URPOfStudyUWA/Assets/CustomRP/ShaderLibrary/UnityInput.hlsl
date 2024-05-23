@@ -26,4 +26,13 @@ float4x4 unity_matrix_i_v;
 // 相机位置(物体表面到相机的方向）
 float3 _WorldSpaceCameraPos;
 
+// 定义7个float4类型向量来接受CPU传递来的光探针数据
+float4 unity_SHAr;
+float4 unity_SHAg;
+float4 unity_SHAb;
+float4 unity_SHBr;
+float4 unity_SHBg;
+float4 unity_SHBb;
+float4 unity_SHC;
+
 #endif

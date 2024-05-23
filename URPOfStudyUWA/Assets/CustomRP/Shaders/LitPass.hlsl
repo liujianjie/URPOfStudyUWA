@@ -96,7 +96,7 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
         BRDF brdf = GetBRDF(surface); // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
     #endif
     // 获取全局照明数据
-    GI gi = GetGI(GI_FRAGMENT_DATA(input)); // 
+    GI gi = GetGI(GI_FRAGMENT_DATA(input), surface); // 
     float3 color = GetLighting(surface, brdf, gi);  // 然后用BRDF数据计算光照结果
 #if defined(DIRECTIONAL_FILTER_SETUP)
     //color = float3(0.5, 0.5, 0.5);
