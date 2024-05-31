@@ -98,7 +98,7 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     // 获取全局照明数据
     GI gi = GetGI(GI_FRAGMENT_DATA(input), surface); // 
     float3 color = GetLighting(surface, brdf, gi);  // 然后用BRDF数据计算光照结果
-#if defined(DIRECTIONAL_FILTER_SETUP)
+#if defined(LIGHTMAP_ON)
     //color = float3(0.5, 0.5, 0.5);
 #endif
     return float4(color, surface.alpha);
