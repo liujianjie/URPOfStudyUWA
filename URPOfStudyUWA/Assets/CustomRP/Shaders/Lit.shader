@@ -31,7 +31,7 @@ Shader "CustomRP/Lit"
     {     
         HLSLINCLUDE
 		#include "../ShaderLibrary/Common.hlsl"
-		//#include "LitInput.hlsl"
+		#include "LitInput.hlsl"
 		ENDHLSL
         Pass
         {

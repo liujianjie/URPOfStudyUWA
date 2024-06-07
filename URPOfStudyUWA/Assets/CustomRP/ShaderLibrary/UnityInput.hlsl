@@ -1,10 +1,9 @@
-//unity标准输入库
+﻿//unity标准输入库
 #ifndef CUSTOM_UNITY_INPUT_INCLUDED
 #define CUSTOM_UNITY_INPUT_INCLUDED
 CBUFFER_START(UnityPerDraw)
 float4x4 unity_ObjectToWorld;
 float4x4 unity_WorldToObject;
-
 float4 unity_LODFade;
 //相机位置
 float3 _WorldSpaceCameraPos;

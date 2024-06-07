@@ -1,72 +1,82 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Collections;
+﻿using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.UI;
-
-public class Lighting 
+/// <summary>
+/// 灯光管理类
+/// </summary>
+public class Lighting
 {
-    const string bufferName = "Lighting";
 
-    CommandBuffer buffer = new CommandBuffer
-    {
-        name = bufferName,
-    };
+	const string bufferName = "Lighting";
 
-    // 限制最大可见平行光的数量为4
+	CommandBuffer buffer = new CommandBuffer
+	{
+		name = bufferName
+	};
+    //设置最大可见定向光数量
     const int maxDirLightCount = 4;
 
-    // 定义了2个着色器标志ID字段用于将灯光发送到GPU的对应属性中
-    static int dirLightCountId = Shader.PropertyToID("_DirectionalLightCount");
-    static int dirLightColorId = Shader.PropertyToID("_DirectionalLightColors");
-    static int dirLightDirectionId = Shader.PropertyToID("_DirectionalLightDirections");
-    static int dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
 
-    // 存储可见光的颜色和方向
+    static int dirLightCountId = Shader.PropertyToID("_DirectionalLightCount");
+    static int dirLightColorsId = Shader.PropertyToID("_DirectionalLightColors");
+    static int dirLightDirectionsId = Shader.PropertyToID("_DirectionalLightDirections");
+    static int dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
+    //存储定向光的颜色和方向
     static Vector4[] dirLightColors = new Vector4[maxDirLightCount];
     static Vector4[] dirLightDirections = new Vector4[maxDirLightCount];
-    // 存储阴影数据
+    //存储定向光的阴影数据
     static Vector4[] dirLightShadowData = new Vector4[maxDirLightCount];
-
-    // 存储相机剔除后的结果
+    //存储相机剔除后的结果
     CullingResults cullingResults;
-    Shadows shadows = new Shadows();
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
-    {
+    Shadows shadows = new Shadows();
+    //初始化设置
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults,ShadowSettings shadowSettings)
+	{
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
-        // 传递阴影数据
+        //阴影的初始化设置
         shadows.Setup(context, cullingResults, shadowSettings);
-        // 发送光源数据
-        //SetupDirectionalLight();
+        //存储并发送所有光源数据
         SetupLights();
-
+        //渲染阴影
         shadows.Render();
-
         buffer.EndSample(bufferName);
-
-        context.ExecuteCommandBuffer(buffer);
-
-        buffer.Clear();
+		context.ExecuteCommandBuffer(buffer);
+		buffer.Clear();
+	}
+	/// <summary>
+    /// 存储定向光的数据
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="visibleIndex"></param>
+    /// <param name="visibleLight"></param>
+    /// <param name="light"></param>
+	void SetupDirectionalLight(int index, ref VisibleLight visibleLight) {
+        dirLightColors[index] = visibleLight.finalColor;
+        //通过VisibleLight.localToWorldMatrix属性找到前向矢量,它在矩阵第三列，还要进行取反
+        dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+        //存储阴影数据
+        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
     }
-    // 发送多个光源的数据
-    void SetupLights()
-    {
-        // 得到所有可见光
+    /// <summary>
+    /// 存储并发送所有光源数据
+    /// </summary>
+    /// <param name="useLightsPerObject"></param>
+    /// <param name="renderingLayerMask"></param>
+    void SetupLights() {
+        //得到所有影响相机渲染物体的可见光数据
         NativeArray<VisibleLight> visibleLights = cullingResults.visibleLights;
-
+        
         int dirLightCount = 0;
-        for(int i = 0; i < visibleLights.Length; i++)
+        for (int i = 0; i < visibleLights.Length; i++)
         {
             VisibleLight visibleLight = visibleLights[i];
-            // 如果是方向光，我们才进行数据存储
-            if(visibleLight.lightType == LightType.Directional)
+
+            if (visibleLight.lightType == LightType.Directional)
             {
-                // visiblelight结构很大，我们改为传递引用不是传递值，这样不会有副本
-                SetupDirectionalLight(dirLightCount++, ref visibleLight);
-                // 当超过灯光限制数量中止循环
+                //VisibleLight结构很大,我们改为传递引用不是传递值，这样不会生成副本
+                SetupDirectionalLight(dirLightCount++,ref visibleLight);
                 if (dirLightCount >= maxDirLightCount)
                 {
                     break;
@@ -75,25 +85,13 @@ public class Lighting
         }
 
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
-        buffer.SetGlobalVectorArray(dirLightColorId, dirLightColors);
-        buffer.SetGlobalVectorArray(dirLightDirectionId, dirLightDirections);
+        buffer.SetGlobalVectorArray(dirLightColorsId, dirLightColors);
+        buffer.SetGlobalVectorArray(dirLightDirectionsId, dirLightDirections);
         buffer.SetGlobalVectorArray(dirLightShadowDataId, dirLightShadowData);
     }
-
-    // 将场景主光源的光照颜色和方向传递给GPU
-    void SetupDirectionalLight(int index, ref VisibleLight visibleLight)
-    {
-        dirLightColors[index] = visibleLight.finalColor;
-        dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);// 第三列是光照方向，取反是来源方向
-
-        // 存储阴影数据
-        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
-
-    }
-    // 释放阴影贴图RT内存
+    //释放申请的RT内存
     public void Cleanup()
     {
         shadows.Cleanup();
     }
-
 }

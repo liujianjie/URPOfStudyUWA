@@ -1,7 +1,5 @@
-#ifndef CUSTOM_UNLIT_PASS_INCLUDED
-#define CUSTOM_UNLIT_PASS_INCLUDED
-
-#include "../ShaderLibrary/Common.hlsl"
+﻿#ifndef CUSTOM_LIT_PASS_INCLUDED
+#define CUSTOM_LIT_PASS_INCLUDED
 #include "../ShaderLibrary/Surface.hlsl"
 #include "../ShaderLibrary/Shadows.hlsl"
 #include "../ShaderLibrary/Light.hlsl"
@@ -9,100 +7,79 @@
 #include "../ShaderLibrary/GI.hlsl"
 #include "../ShaderLibrary/Lighting.hlsl"
 
-// 所有材质的属性我们需要在常量缓冲区里定义
-//CBUFFER_START(UnityPerMaterial)
-//    float4 _BaseColor;
-//CBUFFER_END
 
-// 纹理采样器
-TEXTURE2D(_BaseMap);            // 定义一张纹理
-SAMPLER(sampler_BaseMap);       // 为上一个定义的纹理提供采样器
-
-// 供C#代码Shader.PropertyToID("_BaseColor");获取
-UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
-UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST) // 提供纹理的缩放和平移
-UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
-UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
-UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
-UNITY_DEFINE_INSTANCED_PROP(float, _Smoothness)
-UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
-
-// 用作顶点函数的输入参数
-struct Attributes
-{
-    float3 positionOS : POSITION;
-    float2 baseUV : TEXCOORD;
-    float3 normalOS : NORMAL;   // 表面法线
-    GI_ATTRIBUTE_DATA           // 宏，光照贴图
-    UNITY_VERTEX_INPUT_INSTANCE_ID  
+//顶点函数输入结构体
+struct Attributes {
+	float3 positionOS : POSITION;
+	float2 baseUV : TEXCOORD0;
+	//表面法线
+	float3 normalOS : NORMAL;
+	//光照贴图的UV数据
+	GI_ATTRIBUTE_DATA
+	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
-// 用作片元函数的输入参数
-struct Varyings
-{
-    float4 positionCS : SV_POSITION;
-    float3 positionWS : VAR_POSITION;// 顶点在世界空间的位置
-    float2 baseUV : VAR_BASE_UV;
-    float3 normalWS : NORMAL; // 世界法线
-    GI_VARYINGS_DATA
-    UNITY_VERTEX_INPUT_INSTANCE_ID
+//片元函数输入结构体
+struct Varyings {
+	float4 positionCS : SV_POSITION;
+	float3 positionWS : VAR_POSITION;
+	float2 baseUV : VAR_BASE_UV;
+	//世界法线
+	float3 normalWS : VAR_NORMAL;
+	GI_VARYINGS_DATA
+	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-// 顶点函数
-Varyings LitPassVertex(Attributes input)
-{
-    Varyings output;
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_TRANSFER_INSTANCE_ID(input, output);
-    TRANSFER_GI_DATA(input, output); // 传递光照贴图数据
-    output.positionWS = TransformObjectToWorld(input.positionOS);
-    output.positionCS = TransformWorldToHClip(output.positionWS);
-    // 计算世界空间的法线
-    output.normalWS = TransformObjectToWorldNormal(input.normalOS);
-    // 计算缩放和偏移以后的UV坐标
-    float4 baseST = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseMap_ST);
-    output.baseUV = input.baseUV * baseST.xy + baseST.zw;
-    return output;
+
+//顶点函数
+Varyings LitPassVertex(Attributes input){
+	Varyings output;
+	UNITY_SETUP_INSTANCE_ID(input);
+	TRANSFER_GI_DATA(input, output);
+	//使UnlitPassVertex输出位置和索引,并复制索引
+	UNITY_TRANSFER_INSTANCE_ID(input, output);
+	output.positionWS = TransformObjectToWorld(input.positionOS);
+	output.positionCS = TransformWorldToHClip(output.positionWS);
+	//计算世界空间的法线
+	output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+	//计算缩放和偏移后的UV坐标
+	//float4 baseST = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseMap_ST);
+	output.baseUV = TransformBaseUV(input.baseUV);
+	return output;
 }
-
-// 片元函数
-float4 LitPassFragment(Varyings input) : SV_TARGET
-{
-    UNITY_SETUP_INSTANCE_ID(input);
-    float4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.baseUV); // 采样纹理
-    float4 baseColor = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseColor);
-    float4 base = baseMap * baseColor;
-    #if defined(_CLIPPING)
-        // 透明度低于阙值的片元进行丢弃
-        clip(base.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Cutoff));
-    #endif
-    // 定义哥surface并填充属性
-    Surface surface;
-    surface.position = input.positionWS;
-    surface.normal = normalize(input.normalWS);
-    surface.color = base.rgb;
-    surface.alpha = base.a;
-    surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Metallic); // UnityPerMaterial,别写错成UnityPermaterial
-    surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);
-    // 计算抖动值
-    surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
-    // 得到视角方向
-    surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionCS);
-    // 获取表面深度
-    surface.depth = -TransformWorldToView(input.positionWS).z;
-    // 通过表面属性计算最终光照结果
-    #if defined(_PREMULTIPLY_ALPHA)
-        BRDF brdf = GetBRDF(surface, true);
-    #else
-        BRDF brdf = GetBRDF(surface); // 这里得到表面得BRDF数据：漫反射颜色、镜面反射颜色、粗糙度
-    #endif
-    // 获取全局照明数据
-    GI gi = GetGI(GI_FRAGMENT_DATA(input), surface); // 
-    float3 color = GetLighting(surface, brdf, gi);  // 然后用BRDF数据计算光照结果
-#if defined(LIGHTMAP_ON)
-    //color = float3(0.5, 0.5, 0.5);
+//片元函数
+float4 LitPassFragment(Varyings input) : SV_TARGET {
+	UNITY_SETUP_INSTANCE_ID(input);
+  
+    float4 base = GetBase(input.baseUV);
+#if defined(_CLIPPING)
+	//透明度低于阈值的片元进行舍弃
+	clip(base.a - GetCutoff(input.baseUV));
 #endif
-    return float4(color, surface.alpha);
+	//定义一个surface并填充属性
+	Surface surface;
+	surface.position = input.positionWS;
+	surface.normal = normalize(input.normalWS);
+	//得到视角方向
+	surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionWS);
+	//获取表面深度
+	surface.depth = -TransformWorldToView(input.positionWS).z;
+	surface.color = base.rgb;
+	surface.alpha = base.a;
+	surface.metallic = GetMetallic(input.baseUV);
+	surface.smoothness = GetSmoothness(input.baseUV);
+	//计算抖动值
+	surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
+	//通过表面属性和BRDF计算最终光照结果
+#if defined(_PREMULTIPLY_ALPHA)
+	BRDF brdf = GetBRDF(surface, true);
+#else
+	BRDF brdf = GetBRDF(surface);
+#endif
+	//获取全局照明
+	GI gi = GetGI(GI_FRAGMENT_DATA(input),surface);
+	float3 color = GetLighting(surface, brdf, gi);
+	color += GetEmission(input.baseUV);
+	return float4(color, surface.alpha);
 }
-
 
 #endif
