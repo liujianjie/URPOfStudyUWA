@@ -21,7 +21,7 @@ float4 unity_SHBg;
 float4 unity_SHBb;
 float4 unity_SHC;
 
-//LPPV相关数据
+// LPPV相关数据
 float4 unity_ProbeVolumeParams;
 float4x4 unity_ProbeVolumeWorldToObject;
 float4 unity_ProbeVolumeSizeInv;
