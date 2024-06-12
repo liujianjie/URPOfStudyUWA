@@ -34,9 +34,9 @@ struct Varyings {
 Varyings LitPassVertex(Attributes input){
 	Varyings output;
 	UNITY_SETUP_INSTANCE_ID(input);
-	TRANSFER_GI_DATA(input, output);
 	//使UnlitPassVertex输出位置和索引,并复制索引
-	UNITY_TRANSFER_INSTANCE_ID(input, output);
+    UNITY_TRANSFER_INSTANCE_ID(input, output);
+	TRANSFER_GI_DATA(input, output);
 	output.positionWS = TransformObjectToWorld(input.positionOS);
 	output.positionCS = TransformWorldToHClip(output.positionWS);
 	//计算世界空间的法线

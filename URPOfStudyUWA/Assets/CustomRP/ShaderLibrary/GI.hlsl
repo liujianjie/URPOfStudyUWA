@@ -11,16 +11,17 @@ SAMPLER(samplerunity_ProbeVolumeSH);
 
 //当需要渲染光照贴图对象时
 #if defined(LIGHTMAP_ON)
-#define GI_ATTRIBUTE_DATA float2 lightMapUV : TEXCOORD1;
-#define GI_VARYINGS_DATA float2 lightMapUV : VAR_LIGHT_MAP_UV;
-#define TRANSFER_GI_DATA(input, output) output.lightMapUV = input.lightMapUV * unity_LightmapST.xy + unity_LightmapST.zw;
-#define GI_FRAGMENT_DATA(input) input.lightMapUV
+	#define GI_ATTRIBUTE_DATA float2 lightMapUV : TEXCOORD1;
+	#define GI_VARYINGS_DATA float2 lightMapUV : VAR_LIGHT_MAP_UV;
+	#define TRANSFER_GI_DATA(input, output) \
+		output.lightMapUV = input.lightMapUV * \
+		unity_LightmapST.xy + unity_LightmapST.zw;
+	#define GI_FRAGMENT_DATA(input) input.lightMapUV
 #else
-//否则这些宏都应为空
-#define GI_ATTRIBUTE_DATA
-#define GI_VARYINGS_DATA
-#define TRANSFER_GI_DATA(input, output)
-#define GI_FRAGMENT_DATA(input) 0.0
+	#define GI_ATTRIBUTE_DATA
+	#define GI_VARYINGS_DATA
+	#define TRANSFER_GI_DATA(input, output)
+	#define GI_FRAGMENT_DATA(input) 0.0
 #endif
 
 struct GI {
@@ -42,7 +43,8 @@ float3 SampleLightMap(float2 lightMapUV) {
 #endif
 }
 //光照探针采样
-float3 SampleLightProbe (Surface surfaceWS) {
+float3 SampleLightProbe(Surface surfaceWS)
+{
 	#if defined(LIGHTMAP_ON)
 		return 0.0;
 	#else
@@ -70,9 +72,10 @@ float3 SampleLightProbe (Surface surfaceWS) {
 GI GetGI(float2 lightMapUV, Surface surfaceWS) {
 	GI gi;
 	//将采样结果作为漫反射光照
-    //gi.diffuse = SampleLightMap(lightMapUV) + SampleLightProbe(surfaceWS);
+    gi.diffuse = SampleLightMap(lightMapUV) + SampleLightProbe(surfaceWS);
+    //gi.diffuse = SampleLightMap(lightMapUV);
 
-    gi.diffuse = float3(lightMapUV, 1.0);
+    //gi.diffuse = float3(lightMapUV, 0.0);
 	return gi;
 }
 
