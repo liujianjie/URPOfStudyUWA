@@ -50,8 +50,11 @@ float3 SampleLightProbe(Surface surfaceWS)
 	#else
 	   //判断是否使用LPPV或插值光照探针
 		if (unity_ProbeVolumeParams.x) {
-			return SampleProbeVolumeSH4(TEXTURE3D_ARGS(unity_ProbeVolumeSH, samplerunity_ProbeVolumeSH),surfaceWS.position, surfaceWS.normal,
-				unity_ProbeVolumeWorldToObject,unity_ProbeVolumeParams.y, unity_ProbeVolumeParams.z,unity_ProbeVolumeMin.xyz, unity_ProbeVolumeSizeInv.xyz);
+			return SampleProbeVolumeSH4(TEXTURE3D_ARGS(unity_ProbeVolumeSH, samplerunity_ProbeVolumeSH),
+				surfaceWS.position, surfaceWS.normal,
+				unity_ProbeVolumeWorldToObject,
+				unity_ProbeVolumeParams.y, unity_ProbeVolumeParams.z,
+				unity_ProbeVolumeMin.xyz, unity_ProbeVolumeSizeInv.xyz);
 		}
 		else 
 		{
