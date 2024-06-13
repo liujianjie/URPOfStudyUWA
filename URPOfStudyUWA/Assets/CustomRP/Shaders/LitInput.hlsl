@@ -2,6 +2,7 @@
 #define CUSTOM_LIT_INPUT_INCLUDED
 
 TEXTURE2D(_EmissionMap);
+
 TEXTURE2D(_BaseMap);
 SAMPLER(sampler_BaseMap);
 

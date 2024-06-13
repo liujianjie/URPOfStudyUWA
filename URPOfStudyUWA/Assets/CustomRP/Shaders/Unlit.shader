@@ -15,6 +15,10 @@ Shader "CustomeRP/Unlit"
 
     SubShader
     {
+        HLSLINCLUDE
+		#include "../ShaderLibrary/Common.hlsl"
+		#include "UnlitInput.hlsl"
+		ENDHLSL
         Pass{
             // 定义混合而陌生
             Blend[_SrcBlend][_DstBlend]
@@ -26,7 +30,7 @@ Shader "CustomeRP/Unlit"
             #pragma multi_compile_instancing
 	        #pragma vertex UnlitPassVertex
 	        #pragma fragment UnlitPassFragment
-            #include "../ShaderLibrary/Common.hlsl"
+            //#include "../ShaderLibrary/Common.hlsl"
 	        #include "UnlitPass.hlsl"
 	        ENDHLSL
         }
