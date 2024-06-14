@@ -34,9 +34,6 @@ Shader "CustomeRP/Unlit"
 	        #include "UnlitPass.hlsl"
 	        ENDHLSL
         }
-    }
-    SubShader
-    {
         Pass{
             Tags{ "LightMode" = "ShadowCaster" }
             ColorMask 0     // 不写入任何颜色数据，但会进行深度测试，并把深度值写入深度缓冲区中
@@ -52,6 +49,21 @@ Shader "CustomeRP/Unlit"
 	        #include "ShadowCasterPass.hlsl"
 	        ENDHLSL
         }
+        Pass
+		{
+		 	Tags {
+		 		"LightMode" = "Meta"
+		 	}
+
+		 	Cull Off	// 关闭剔除功能
+
+		 	HLSLPROGRAM
+		 	#pragma target 3.5
+		 	#pragma vertex MetaPassVertex
+		 	#pragma fragment MetaPassFragment
+		 	#include "MetaPass.hlsl"
+		 	ENDHLSL
+		}
     }
     
     CustomEditor "CustomShaderGUI"
