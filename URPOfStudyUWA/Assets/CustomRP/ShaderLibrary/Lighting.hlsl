@@ -15,7 +15,11 @@ float3 GetLighting(Surface surfaceWS, BRDF brdf,  GI gi) {
 	//得到表面阴影数据
 	ShadowData shadowData = GetShadowData(surfaceWS);
 	//可见光的光照结果进行累加得到最终光照结果
+	// TODO: 因为这里*了brdf.diffuse导致之前的小节不正确。。。
 	float3 color = gi.diffuse * brdf.diffuse;
+	// brdf.diffuse是表面的漫反射,gi.diffuse是全局光照的漫反射
+    color = gi.diffuse * brdf.diffuse;
+    //color = brdf.diffuse;
 	for (int i = 0; i < GetDirectionalLightCount(); i++) {
 		Light light = GetDirectionalLight(i, surfaceWS, shadowData);
 		color += GetLighting(surfaceWS, brdf, light);
