@@ -37,6 +37,7 @@ float GetMetallic(float2 baseUV) {
 float GetSmoothness(float2 baseUV) {
 	return 0;
 }
+// 也需要
 float3 GetEmission (float2 baseUV) {
 	return GetBase(baseUV).rgb;
 }

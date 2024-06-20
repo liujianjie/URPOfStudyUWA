@@ -2,7 +2,8 @@ Shader "CustomeRP/Unlit"
 {
     Properties{
         _BaseMap("Texture", 2D) = "white" {}
-        _BaseColor("Color", Color) = (1.0, 1.0, 1.0, 1.0)
+        // HDR标签
+        [HDR] _BaseColor("Color", Color) = (1.0, 1.0, 1.0, 1.0)
         // 透明度测试的阙值
         _Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
         [Toggle(_CLIPPING)] _Clipping("Alpha Clipping", Float) = 0

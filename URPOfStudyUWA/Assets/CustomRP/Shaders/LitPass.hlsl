@@ -77,7 +77,8 @@ float4 LitPassFragment(Varyings input) : SV_TARGET {
 #endif
 	//获取全局照明
 	GI gi = GetGI(GI_FRAGMENT_DATA(input),surface);
-	float3 color = GetLighting(surface, brdf, gi);
+    float3 color = GetLighting(surface, brdf, gi);
+	// 添加自发光
 	color += GetEmission(input.baseUV);
 	return float4(color, surface.alpha);
 }
