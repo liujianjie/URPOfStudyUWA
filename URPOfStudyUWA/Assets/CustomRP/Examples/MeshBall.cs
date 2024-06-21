@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class MeshBall : MonoBehaviour
 {
@@ -53,7 +54,20 @@ public class MeshBall : MonoBehaviour
 
             block.SetFloatArray(metallicId, metallic);
             block.SetFloatArray(smoothnessId, smoothness);
+            //给每个小球添加光照探针
+            var positions = new Vector3[1023];
+            for (int i = 0; i < matrices.Length; i++)
+            {
+                positions[i] = matrices[i].GetColumn(3);    // 得到实例位置
+            }
+            // 创建每个对象实例的光照探针
+            var lightProbes = new SphericalHarmonicsL2[1023];
+            // 填充数据
+            LightProbes.CalculateInterpolatedLightAndOcclusionProbes(positions, lightProbes, null);
+            // 将光照探针数据复制到材质属性块
+            block.CopySHCoefficientArraysFrom(lightProbes);
         }
-        Graphics.DrawMeshInstanced(mesh, 0, material, matrices, 1023, block);
+        // 添加5个参数来使用光照探针
+        Graphics.DrawMeshInstanced(mesh, 0, material, matrices, 1023, block, UnityEngine.Rendering.ShadowCastingMode.On, true, 0, null, UnityEngine.Rendering.LightProbeUsage.CustomProvided);
     }
 }
