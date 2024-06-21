@@ -39,9 +39,11 @@ public class CustomShaderGUI : ShaderGUI
         if (EditorGUI.EndChangeCheck())
         {
             SetShadowCasterPass();
+            // 为了烘焙透明物体
             CopyLightMappingProperties();
         }
     }
+
     /// <summary>
     /// 进行烘焙自发光的设置
     /// </summary>
@@ -49,30 +51,30 @@ public class CustomShaderGUI : ShaderGUI
     {
         EditorGUI.BeginChangeCheck();
         editor.LightmapEmissionProperty();
+
         //将自发光的Global Illumination属性在材质面板中暴露出来
         if (EditorGUI.EndChangeCheck())
         {
             foreach (Material m in editor.targets)
             {
-                
                 m.globalIlluminationFlags &=~MaterialGlobalIlluminationFlags.EmissiveIsBlack;
             }
         }
     }
     /// <summary>
-    /// 函数功能:若_BaseMap、_BaseColor属性值有修改，则将其同步到_MainTex和_Color中
+    /// 为了烘焙透明。物体函数功能:若_BaseMap、_BaseColor属性值有修改，则将其同步到_MainTex和_Color中
     /// </summary>
     void CopyLightMappingProperties()
     {
-        MaterialProperty mainTex = FindProperty("_MainTex", properties, false);
-        MaterialProperty baseMap = FindProperty("_BaseMap", properties, false);
+        MaterialProperty mainTex = FindProperty("_MainTex", properties, false); // 目标
+        MaterialProperty baseMap = FindProperty("_BaseMap", properties, false); // 源
         if (mainTex != null && baseMap != null)
         {
             mainTex.textureValue = baseMap.textureValue;
             mainTex.textureScaleAndOffset = baseMap.textureScaleAndOffset;
         }
-        MaterialProperty color = FindProperty("_Color", properties, false);
-        MaterialProperty baseColor = FindProperty("_BaseColor", properties, false);
+        MaterialProperty color = FindProperty("_Color", properties, false);         // 目标
+        MaterialProperty baseColor = FindProperty("_BaseColor", properties, false);// 源
         if (color != null && baseColor != null)
         {
             color.colorValue = baseColor.colorValue;
