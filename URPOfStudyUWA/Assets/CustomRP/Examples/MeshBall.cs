@@ -9,6 +9,8 @@ public class MeshBall : MonoBehaviour
     static int metallicId = Shader.PropertyToID("_Metallic");
     static int smoothnessId = Shader.PropertyToID("_Smoothness");
 
+    static int cutoffId = Shader.PropertyToID("_Cutoff");
+
     [SerializeField]
     Mesh mesh = default;
     [SerializeField]
@@ -21,7 +23,14 @@ public class MeshBall : MonoBehaviour
     float[] metallic = new float[1023];
     float[] smoothness = new float[1023];
 
+    [SerializeField, Range(0f, 1f)]
+    float cutoff = 0.5f;
+
     MaterialPropertyBlock block;
+
+    // LPPV代理
+    [SerializeField]
+    LightProbeProxyVolume lightProbeVolume = null;
 
     private void Awake()
     {
@@ -54,20 +63,24 @@ public class MeshBall : MonoBehaviour
 
             block.SetFloatArray(metallicId, metallic);
             block.SetFloatArray(smoothnessId, smoothness);
-            //给每个小球添加光照探针
-            var positions = new Vector3[1023];
-            for (int i = 0; i < matrices.Length; i++)
+            if (!lightProbeVolume)
             {
-                positions[i] = matrices[i].GetColumn(3);    // 得到实例位置
+                //给每个小球添加光照探针
+                var positions = new Vector3[1023];
+                for (int i = 0; i < matrices.Length; i++)
+                {
+                    positions[i] = matrices[i].GetColumn(3);    // 得到实例位置
+                }
+                // 创建每个对象实例的光照探针
+                var lightProbes = new SphericalHarmonicsL2[1023];
+                // 填充数据
+                LightProbes.CalculateInterpolatedLightAndOcclusionProbes(positions, lightProbes, null);
+                // 将光照探针数据复制到材质属性块
+                block.CopySHCoefficientArraysFrom(lightProbes);
             }
-            // 创建每个对象实例的光照探针
-            var lightProbes = new SphericalHarmonicsL2[1023];
-            // 填充数据
-            LightProbes.CalculateInterpolatedLightAndOcclusionProbes(positions, lightProbes, null);
-            // 将光照探针数据复制到材质属性块
-            block.CopySHCoefficientArraysFrom(lightProbes);
+            block.SetFloat(cutoffId, cutoff);
         }
         // 添加5个参数来使用光照探针
-        Graphics.DrawMeshInstanced(mesh, 0, material, matrices, 1023, block, UnityEngine.Rendering.ShadowCastingMode.On, true, 0, null, UnityEngine.Rendering.LightProbeUsage.CustomProvided);
+        Graphics.DrawMeshInstanced(mesh, 0, material, matrices, 1023, block, ShadowCastingMode.On, true, 0, null, lightProbeVolume ? LightProbeUsage.UseProxyVolume : LightProbeUsage.CustomProvided, lightProbeVolume);
     }
 }
