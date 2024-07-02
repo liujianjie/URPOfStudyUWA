@@ -74,10 +74,16 @@ public class Shadows
         "_CASCADE_BLEND_SOFT",
         "_CASCADE_BLEND_DITHER"
     };
+    // 阴影蒙版模式
+    static string[] shadowMaskKeywords =
+    {
+        "_SHADOW_MASK_DISTANCE"
+    };
 
     //存储光源的阴影转换矩阵
     private static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
 
+    bool useShadowMask;
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings
@@ -88,6 +94,8 @@ public class Shadows
         this.settings = settings;
 
         ShadowedDirectionalLightCount = 0;
+
+        useShadowMask = false;
     }
 
     /// <summary>
@@ -109,16 +117,22 @@ public class Shadows
     {
         if (ShadowedDirectionalLightCount < maxShadowedDirectionalLightCount
             && light.shadows != LightShadows.None
-            && light.shadowStrength > 0f
-
-            && cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
+            && light.shadowStrength > 0f)
         {
+            // 如果使用了shadowmask
+            LightBakingOutput lightBaking = light.bakingOutput;
+            if (lightBaking.lightmapBakeType == LightmapBakeType.Mixed && lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
+            {
+                useShadowMask = true;
+            }
+
             ShadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight
             {
                 visibleLightIndex = visibleLightIndex,
                 slopeScaleBias = light.shadowBias,
                 nearPlaneOffset = light.shadowNearPlane
             };
+
             //返回阴影强度、阴影图块的偏移索引、法线偏差
             return new Vector3(light.shadowStrength, settings.directional.cascadeCount * ShadowedDirectionalLightCount++, light.shadowNormalBias);
         }
@@ -134,6 +148,11 @@ public class Shadows
         {
             RenderDirectionalShadows();
         }
+        // 是否使用阴影蒙版
+        buffer.BeginSample(bufferName);
+        SetKeywords(shadowMaskKeywords, useShadowMask ? 0 : -1);
+        buffer.EndSample(bufferName);
+        ExecuteBuffer();
     }
 
     /// <summary>

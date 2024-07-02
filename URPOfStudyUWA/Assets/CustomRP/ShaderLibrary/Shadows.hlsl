@@ -44,13 +44,21 @@ struct DirectionalShadowData {
 	//法线偏差
 	float normalBias;
 };
-//阴影数据
+
+// 烘焙阴影谁
+struct ShadowMask
+{
+    bool distance;
+    float4 shadows;
+};
+// 表面的阴影数据
 struct ShadowData {
 	int cascadeIndex;
 	//是否采样阴影的标识
 	float strength;
 	//混合级联
 	float cascadeBlend;
+    ShadowMask shadowMask;
 };
 //采样阴影图集
 float SampleDirectionalShadowAtlas(float3 positionSTS) {
@@ -109,6 +117,8 @@ float FadedShadowStrength (float distance, float scale, float fade) {
 //得到世界空间的表面阴影数据
 ShadowData GetShadowData (Surface surfaceWS) {
 	ShadowData data;
+    data.shadowMask.distance = false;
+    data.shadowMask.shadows = 1.0;
 	data.cascadeBlend = 1.0;
 	data.strength =FadedShadowStrength(surfaceWS.depth, _ShadowDistanceFade.x, _ShadowDistanceFade.y);
 	int i;

@@ -9,6 +9,10 @@ SAMPLER(samplerunity_Lightmap);
 TEXTURE3D_FLOAT(unity_ProbeVolumeSH);
 SAMPLER(samplerunity_ProbeVolumeSH);
 
+// 阴影蒙版纹理和相关采样器
+TEXTURE2D(unity_ShadowMask);
+SAMPLER(samplerunity_ShadowMask);
+
 //当需要渲染光照贴图对象时
 #if defined(LIGHTMAP_ON)
 	#define GI_ATTRIBUTE_DATA float2 lightMapUV : TEXCOORD1;
@@ -27,6 +31,7 @@ SAMPLER(samplerunity_ProbeVolumeSH);
 struct GI {
 	//漫反射颜色
 	float3 diffuse;
+    ShadowMask shadowMask;
 };
 //采样光照贴图
 float3 SampleLightMap(float2 lightMapUV) {
@@ -71,11 +76,26 @@ float3 SampleLightProbe(Surface surfaceWS)
 		}
 	#endif
 }
+// 使用光照贴图的uv坐标对阴影蒙版纹理进行采样
+float4 SampleBakedShadows(float2 lightMapUV)
+{
+	#if defined(LIGHTMAP_ON)
+		return SAMPLE_TEXTURE2D(unity_ShadowMask, samplerunity_ShadowMask, lightMapUV);
+#else
+    return 1.0;
+	#endif
+}
 //得到全局照明数据
 GI GetGI(float2 lightMapUV, Surface surfaceWS) {
 	GI gi;
 	//将采样结果作为漫反射光照
     gi.diffuse = SampleLightMap(lightMapUV) + SampleLightProbe(surfaceWS);
+    gi.shadowMask.distance = false;
+    gi.shadowMask.shadows = 1.0f;
+	#if defined(_SHADOW_MASK_DISTANCE)
+		gi.shadowMask.distance = true;
+		gi.shadowMask.shadows = SampleBakedShadows(lightMapUV);
+	#endif
     //gi.diffuse = SampleLightMap(lightMapUV);
 
     //gi.diffuse = float3(lightMapUV, 0.0);
