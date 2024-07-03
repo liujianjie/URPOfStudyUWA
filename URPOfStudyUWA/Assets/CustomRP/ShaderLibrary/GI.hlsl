@@ -77,11 +77,22 @@ float3 SampleLightProbe(Surface surfaceWS)
 	#endif
 }
 // 使用光照贴图的uv坐标对阴影蒙版纹理进行采样
-float4 SampleBakedShadows(float2 lightMapUV)
+float4 SampleBakedShadows(float2 lightMapUV, Surface surfaceWS)
 {
 	#if defined(LIGHTMAP_ON)
 		return SAMPLE_TEXTURE2D(unity_ShadowMask, samplerunity_ShadowMask, lightMapUV);
 #else
+    if (unity_ProbeVolumeParams.x)
+    {
+		// 采样LPPV遮挡数据
+        return SampleProbeOcclusion(TEXTURE3D_ARGS(unity_ProbeVolumeSH, samplerunity_ProbeVolumeSH), surfaceWS.position,
+			unity_ProbeVolumeWorldToObject, unity_ProbeVolumeParams.y, unity_ProbeVolumeParams.z, unity_ProbeVolumeMin.xyz, unity_ProbeVolumeSizeInv.xyz);
+
+    }
+    else
+    {
+        return unity_ProbesOcclusion; // 没有光照贴图时，返回unity_ProbesOcclusion 遮挡探针数据
+    }
     return 1.0;
 	#endif
 }
@@ -94,7 +105,7 @@ GI GetGI(float2 lightMapUV, Surface surfaceWS) {
     gi.shadowMask.shadows = 1.0f;
 	#if defined(_SHADOW_MASK_DISTANCE)
 		gi.shadowMask.distance = true;
-		gi.shadowMask.shadows = SampleBakedShadows(lightMapUV);
+		gi.shadowMask.shadows = SampleBakedShadows(lightMapUV, surfaceWS);
 	#endif
     //gi.diffuse = SampleLightMap(lightMapUV);
 

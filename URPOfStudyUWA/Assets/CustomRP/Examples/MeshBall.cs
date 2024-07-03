@@ -73,10 +73,12 @@ public class MeshBall : MonoBehaviour
                 }
                 // 创建每个对象实例的光照探针
                 var lightProbes = new SphericalHarmonicsL2[1023];
+                var occlusionProbes = new Vector4[1023];
                 // 填充数据
                 LightProbes.CalculateInterpolatedLightAndOcclusionProbes(positions, lightProbes, null);
                 // 将光照探针数据复制到材质属性块
                 block.CopySHCoefficientArraysFrom(lightProbes);
+                block.CopyProbeOcclusionArrayFrom(occlusionProbes);
             }
             block.SetFloat(cutoffId, cutoff);
         }
