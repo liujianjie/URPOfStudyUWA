@@ -28,7 +28,8 @@ int GetDirectionalLightCount() {
 //获取方向光的阴影数据
 DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadowData) {
 	DirectionalShadowData data;
-	data.strength = _DirectionalLightShadowData[lightIndex].x * shadowData.strength;
+    //data.strength = _DirectionalLightShadowData[lightIndex].x * shadowData.strength;
+    data.strength = _DirectionalLightShadowData[lightIndex].x ;
 	data.tileIndex = _DirectionalLightShadowData[lightIndex].y + shadowData.cascadeIndex;
 	//法线偏差
 	data.normalBias = _DirectionalLightShadowData[lightIndex].z;

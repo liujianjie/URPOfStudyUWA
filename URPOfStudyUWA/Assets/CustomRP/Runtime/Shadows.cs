@@ -125,6 +125,10 @@ public class Shadows
             {
                 useShadowMask = true;
             }
+            if (!cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
+            {
+                return new Vector3(-light.shadowStrength, 0f, 0f);
+            }
 
             ShadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight
             {

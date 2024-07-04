@@ -112,15 +112,25 @@ float GetBakedShadow(ShadowMask mask)
     }
     return shadow;
 }
+// 根据传入的灯光阴影强度对烘焙阴影进行插值得到烘焙阴影的衰减值
+float GetBakedShadow(ShadowMask mask, float strength)
+{
+    if (mask.distance)
+    {
+        return lerp(1.0, GetBakedShadow(mask), strength);
+    }
+    return 1.0;
+}
 // 来混合烘焙和实时阴影
 float MixBakedAndRealtimeShadows(ShadowData global, float shadow, float strength)
 {
     float baked = GetBakedShadow(global.shadowMask);
     if (global.shadowMask.distance)
     {
-        shadow = baked;
+        shadow = lerp(baked, shadow, global.strength);
+        return lerp(1.0, shadow, strength);
     }
-    return lerp(1.0, shadow, strength);
+    return lerp(1.0, shadow, strength * global.strength);
 }
 //得到级联阴影强度
 float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowData global, Surface surfaceWS) {
@@ -129,8 +139,8 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
 	return 1.0;
 #endif
     float shadow;
-	if (directional.strength <= 0.0) {
-		return 1.0;
+	if (directional.strength * global.strength <= 0.0) {
+        shadow = GetBakedShadow(global.shadowMask, abs(directional.strength));
     }
     else
     {
