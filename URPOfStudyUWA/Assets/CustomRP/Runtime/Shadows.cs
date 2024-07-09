@@ -77,6 +77,7 @@ public class Shadows
     // 阴影蒙版模式
     static string[] shadowMaskKeywords =
     {
+        "_SHADOW_MASK_ALWAYS",
         "_SHADOW_MASK_DISTANCE"
     };
 
@@ -154,7 +155,7 @@ public class Shadows
         }
         // 是否使用阴影蒙版
         buffer.BeginSample(bufferName);
-        SetKeywords(shadowMaskKeywords, useShadowMask ? 0 : -1);
+        SetKeywords(shadowMaskKeywords, useShadowMask ?  QualitySettings.shadowmaskMode == ShadowmaskMode.Shadowmask ? 0 : 1: -1);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }

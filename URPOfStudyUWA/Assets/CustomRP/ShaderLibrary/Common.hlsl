@@ -20,7 +20,7 @@ float Square (float v) {
 float DistanceSquared(float3 pA, float3 pB) {
 	return dot(pA - pB, pA - pB);
 }
-#if defined(_SHADOW_MASK_ALWAYS) || defined(SHADOWS_MASK_DISTANCE)
+#if defined(_SHADOW_MASK_ALWAYS) ||  defined(_SHADOW_MASK_DISTANCE) 
 	#define SHADOWS_SHADOWMASK
 #endif
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
