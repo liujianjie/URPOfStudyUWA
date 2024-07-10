@@ -110,7 +110,7 @@ float GetBakedShadow(ShadowMask mask, int channel)
     float shadow = 1.0f;
     if (mask.always || mask.distance)
     {
-		if(channel > 0){
+		if(channel >= 0){			// 写错过，应该是>=0，因为光照通道从0开始
 			shadow = mask.shadows[channel];
 		}
     }
