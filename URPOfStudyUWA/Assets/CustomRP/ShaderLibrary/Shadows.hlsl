@@ -43,6 +43,7 @@ struct DirectionalShadowData {
 	int tileIndex;
 	//法线偏差
 	float normalBias;
+	int shadowMaskChannel;
 };
 
 // 烘焙阴影谁
@@ -104,28 +105,30 @@ float GetCascadedShadow(DirectionalShadowData directional, ShadowData global, Su
     return shadow;
 }
 // 得到烘焙阴影的衰减值
-float GetBakedShadow(ShadowMask mask)
+float GetBakedShadow(ShadowMask mask, int channel)
 {
     float shadow = 1.0f;
     if (mask.always || mask.distance)
     {
-        shadow = mask.shadows.r;
+		if(channel > 0){
+			shadow = mask.shadows[channel];
+		}
     }
     return shadow;
 }
 // 根据传入的灯光阴影强度对烘焙阴影进行插值得到烘焙阴影的衰减值
-float GetBakedShadow(ShadowMask mask, float strength)
+float GetBakedShadow(ShadowMask mask, int channel , float strength)
 {
     if (mask.always || mask.distance)
     {
-        return lerp(1.0, GetBakedShadow(mask), strength);
+        return lerp(1.0, GetBakedShadow(mask, channel), strength);
     }
     return 1.0;
 }
 // 来混合烘焙和实时阴影
-float MixBakedAndRealtimeShadows(ShadowData global, float shadow, float strength)
+float MixBakedAndRealtimeShadows(ShadowData global, float shadow, int shadowMaskChannel, float strength)
 {
-    float baked = GetBakedShadow(global.shadowMask);
+    float baked = GetBakedShadow(global.shadowMask, shadowMaskChannel);
     if (global.shadowMask.always)
     {
         shadow = lerp(1.0, shadow, global.strength);
@@ -147,7 +150,7 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
 #endif
     float shadow;
 	if (directional.strength * global.strength <= 0.0) {
-        shadow = GetBakedShadow(global.shadowMask, abs(directional.strength));
+        shadow = GetBakedShadow(global.shadowMask, directional.shadowMaskChannel, abs(directional.strength));
     }
     else
     {
@@ -155,7 +158,7 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
 		//最终衰减结果是阴影强度和采样衰减的线性差值
         //shadow = lerp(1.0, shadow, directional.strength);
 		// 阴影混合
-        shadow = MixBakedAndRealtimeShadows(global, shadow, directional.strength);
+        shadow = MixBakedAndRealtimeShadows(global, shadow, directional.shadowMaskChannel, directional.strength);
     }
     return shadow;
 }
