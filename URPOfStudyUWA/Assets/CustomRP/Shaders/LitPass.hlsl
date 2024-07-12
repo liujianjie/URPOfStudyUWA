@@ -49,8 +49,9 @@ Varyings LitPassVertex(Attributes input){
 //片元函数
 float4 LitPassFragment(Varyings input) : SV_TARGET {
     UNITY_SETUP_INSTANCE_ID(input);
+    ClipLOD(input.positionCS.xy, unity_LODFade.x);
 #if defined(LOD_FADE_CROSSFADE)
-	   return unity_LODFade.x;
+	   //return unity_LODFade.x;
 #endif
     float4 base = GetBase(input.baseUV);
 #if defined(_CLIPPING)
