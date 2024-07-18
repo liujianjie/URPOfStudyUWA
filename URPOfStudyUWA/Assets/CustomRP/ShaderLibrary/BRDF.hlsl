@@ -10,6 +10,8 @@ struct BRDF {
 	float3 specular;
 	//粗糙度
 	float roughness;
+	
+    float perceptualRoughness;
 };
 
 //电介质的反射率平均约0.04
@@ -32,8 +34,8 @@ BRDF GetBRDF (Surface surface, bool applyAlphaToDiffuse = false) {
 	}
 	brdf.specular = lerp(MIN_REFLECTIVITY, surface.color, surface.metallic);
 	//光滑度转为实际粗糙度
-	float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
-	brdf.roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
+	brdf.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
+    brdf.roughness = PerceptualRoughnessToRoughness(brdf.perceptualRoughness);
 	return brdf;
 }
 //根据公式得到镜面反射强度

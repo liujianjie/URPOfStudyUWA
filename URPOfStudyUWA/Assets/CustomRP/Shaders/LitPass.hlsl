@@ -79,7 +79,7 @@ float4 LitPassFragment(Varyings input) : SV_TARGET {
 	BRDF brdf = GetBRDF(surface);
 #endif
 	//获取全局照明
-	GI gi = GetGI(GI_FRAGMENT_DATA(input),surface);
+	GI gi = GetGI(GI_FRAGMENT_DATA(input),surface, brdf);
     float3 color = GetLighting(surface, brdf, gi);
 	// 添加自发光
 	color += GetEmission(input.baseUV);

@@ -2,6 +2,8 @@
 #ifndef CUSTOM_GI_INCLUDED
 #define CUSTOM_GI_INCLUDED
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
+
 
 TEXTURE2D(unity_Lightmap);
 SAMPLER(samplerunity_Lightmap);
@@ -12,6 +14,10 @@ SAMPLER(samplerunity_ProbeVolumeSH);
 // 阴影蒙版纹理和相关采样器
 TEXTURE2D(unity_ShadowMask);
 SAMPLER(samplerunity_ShadowMask);
+
+// 采样环境的CubeMap
+TEXTURECUBE(unity_SpecCube0);
+SAMPLER(samplerunity_SpecCube0);
 
 //当需要渲染光照贴图对象时
 #if defined(LIGHTMAP_ON)
@@ -32,6 +38,8 @@ struct GI {
 	//漫反射颜色
 	float3 diffuse;
     ShadowMask shadowMask;
+	// 镜面反射颜色
+    float3 specular;
 };
 //采样光照贴图
 float3 SampleLightMap(float2 lightMapUV) {
@@ -96,11 +104,22 @@ float4 SampleBakedShadows(float2 lightMapUV, Surface surfaceWS)
     return 1.0;
 	#endif
 }
+
+// 采样环境立方体纹理
+float3 SampleEnvironment(Surface surfaceWS, BRDF brdf)
+{
+    float3 uvw = reflect(-surfaceWS.viewDirection, surfaceWS.normal);
+	// 将cube map的模糊版本存储在较低的mipmap级别中来近似实现这个效果：粗糙表面散射镜面反射时，不仅会降低反射强度，且使得反射不均匀
+    float mip = PerceptualRoughnessToMipmapLevel(brdf.perceptualRoughness);
+    float4 environment = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, uvw, mip);
+    return environment.rgb;
+}
 //得到全局照明数据
-GI GetGI(float2 lightMapUV, Surface surfaceWS) {
+GI GetGI(float2 lightMapUV, Surface surfaceWS, BRDF brdf) {
 	GI gi;
 	//将采样结果作为漫反射光照
     gi.diffuse = SampleLightMap(lightMapUV) + SampleLightProbe(surfaceWS);
+    gi.specular = SampleEnvironment(surfaceWS, brdf);
     gi.shadowMask.always = false;
     gi.shadowMask.distance = false;
     gi.shadowMask.shadows = 1.0f;
@@ -117,5 +136,4 @@ GI GetGI(float2 lightMapUV, Surface surfaceWS) {
     //gi.diffuse = float3(lightMapUV, 0.0);
 	return gi;
 }
-
 #endif

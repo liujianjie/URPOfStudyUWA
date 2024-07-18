@@ -23,7 +23,7 @@ float3 GetLighting(Surface surfaceWS, BRDF brdf,  GI gi) {
 	// brdf.diffuse是表面的漫反射,gi.diffuse是全局光照的漫反射
     //color = gi.diffuse * brdf.diffuse;
     //color = brdf.diffuse;
-    float3 color = IndirectBRDF(surfaceWS, brdf, gi.diffuse, 1.0);
+    float3 color = IndirectBRDF(surfaceWS, brdf, gi.diffuse, gi.specular);
 	for (int i = 0; i < GetDirectionalLightCount(); i++) {
 		Light light = GetDirectionalLight(i, surfaceWS, shadowData);
 		color += GetLighting(surfaceWS, brdf, light);
