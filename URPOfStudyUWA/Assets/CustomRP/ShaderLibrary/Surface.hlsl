@@ -14,6 +14,8 @@ struct Surface {
 	float depth;
 	//抖动
 	float dither;
+	// 菲涅尔反射强度
+    float fresnelStrength;
 };
 
 #endif

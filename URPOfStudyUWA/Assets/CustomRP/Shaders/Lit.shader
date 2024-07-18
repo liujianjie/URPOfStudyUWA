@@ -20,6 +20,8 @@ Shader "CustomRP/Lit"
        //金属度和光滑度
 	   _Metallic("Metallic", Range(0, 1)) = 0
 	   _Smoothness("Smoothness", Range(0, 1)) = 0.5
+	   // 菲涅尔反射强度
+	   _Fresnel("Fresnel", Range(0, 1)) = 1
 
 	   // 自发光
 	   [NoScaleOffset] _EmissionMap("Emission", 2D) = "white" {}

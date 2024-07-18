@@ -12,6 +12,8 @@ struct BRDF {
 	float roughness;
 	
     float perceptualRoughness;
+	
+    float fresnel;
 };
 
 //电介质的反射率平均约0.04
@@ -36,6 +38,7 @@ BRDF GetBRDF (Surface surface, bool applyAlphaToDiffuse = false) {
 	// 光滑度转为实际粗糙度
 	brdf.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
     brdf.roughness = PerceptualRoughnessToRoughness(brdf.perceptualRoughness);
+    brdf.fresnel = saturate(surface.smoothness + 1.0 - oneMinusReflectivity);
 	return brdf;
 }
 //根据公式得到镜面反射强度
@@ -55,7 +58,9 @@ float3 DirectBRDF (Surface surface, BRDF brdf, Light light) {
 // 间接brdf
 float3 IndirectBRDF(Surface surface, BRDF brdf, float3 diffuse, float3 specular)
 {
-    float3 reflection = specular * brdf.specular;			// 全局照明的镜面发射*brdf中的镜面反射 = 镜面反射
+    float fresnelStrength = surface.fresnelStrength * Pow4(1.0 - saturate(dot(surface.normal, surface.viewDirection)));
+    float3 reflection = specular * lerp(brdf.specular, brdf.fresnel, fresnelStrength);
+    //float3 reflection = specular * brdf.specular;			// 全局照明的镜面发射*brdf中的镜面反射 = 镜面反射
     reflection /= brdf.roughness * brdf.roughness + 1.0;	// 镜面反射 / (表面粗糙度^2 + 1)，对高粗糙度的表面使得表面反射减半
     return diffuse * brdf.diffuse + reflection;
 }
