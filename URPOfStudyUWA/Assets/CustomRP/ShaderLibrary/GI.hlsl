@@ -112,7 +112,8 @@ float3 SampleEnvironment(Surface surfaceWS, BRDF brdf)
 	// 将cube map的模糊版本存储在较低的mipmap级别中来近似实现这个效果：粗糙表面散射镜面反射时，不仅会降低反射强度，且使得反射不均匀
     float mip = PerceptualRoughnessToMipmapLevel(brdf.perceptualRoughness);
     float4 environment = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, uvw, mip);
-    return environment.rgb;
+    //return environment.rgb;
+    return DecodeHDREnvironment(environment, unity_SpecCube0_HDR);
 }
 //得到全局照明数据
 GI GetGI(float2 lightMapUV, Surface surfaceWS, BRDF brdf) {

@@ -11,6 +11,7 @@ float3 _WorldSpaceCameraPos;
 real4 unity_WorldTransformParams;
 
 float4 unity_ProbesOcclusion;
+float4 unity_SpecCube0_HDR;
 float4 unity_LightmapST;
 float4 unity_DynamicLightmapST;
 //存储光探针数据,它们是代表红色、绿色、蓝光的多项式组件
