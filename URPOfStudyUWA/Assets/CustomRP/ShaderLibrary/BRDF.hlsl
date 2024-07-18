@@ -33,7 +33,7 @@ BRDF GetBRDF (Surface surface, bool applyAlphaToDiffuse = false) {
 		brdf.diffuse *= surface.alpha;
 	}
 	brdf.specular = lerp(MIN_REFLECTIVITY, surface.color, surface.metallic);
-	//光滑度转为实际粗糙度
+	// 光滑度转为实际粗糙度
 	brdf.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
     brdf.roughness = PerceptualRoughnessToRoughness(brdf.perceptualRoughness);
 	return brdf;
