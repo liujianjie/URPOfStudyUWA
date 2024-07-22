@@ -3,6 +3,7 @@
 #define CUSTOM_LIGHT_INCLUDED
 
 #define MAX_DIRECTIONAL_LIGHT_COUNT 4
+#define MAX_OTHER_LIGHT_COUNT 4
 CBUFFER_START(_CustomLight)
 	int _DirectionalLightCount;
 	//定向光源颜色、方向、阴影等数据
@@ -10,6 +11,10 @@ CBUFFER_START(_CustomLight)
     float4 _DirectionalLightDirections[MAX_DIRECTIONAL_LIGHT_COUNT];
 	//阴影数据
 	float4 _DirectionalLightShadowData[MAX_DIRECTIONAL_LIGHT_COUNT];
+	// 非定向光的属性
+	int _OtherLightCount;
+	float4 _OtherLightColors[MAX_OTHER_LIGHT_COUNT];
+	float4 _OtherLightPositions[MAX_OTHER_LIGHT_COUNT];
 CBUFFER_END
 
 //灯光的属性
@@ -24,6 +29,11 @@ struct Light {
 //获取方向光源的数量
 int GetDirectionalLightCount() {
 	return _DirectionalLightCount;
+}
+//获取非定向光源的数量
+int GetOtherLightCount()
+{
+    return _OtherLightCount;
 }
 //获取方向光的阴影数据
 DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadowData) {

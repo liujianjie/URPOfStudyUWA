@@ -61,7 +61,7 @@ float3 IndirectBRDF(Surface surface, BRDF brdf, float3 diffuse, float3 specular)
     float fresnelStrength = surface.fresnelStrength * Pow4(1.0 - saturate(dot(surface.normal, surface.viewDirection)));
     float3 reflection = specular * lerp(brdf.specular, brdf.fresnel, fresnelStrength);
     //float3 reflection = specular * brdf.specular;			// 全局照明的镜面发射*brdf中的镜面反射 = 镜面反射
-    reflection /= brdf.roughness * brdf.roughness + 1.0;	// 镜面反射 / (表面粗糙度^2 + 1)，对高粗糙度的表面使得表面反射减半
+    reflection /= brdf.roughness * brdf.roughness + 1.0; // 镜面反射 / (SampleEnvironment表面粗糙度^2 + 1)，对高粗糙度的表面使得表面反射减半
     return diffuse * brdf.diffuse + reflection;
 }
 
