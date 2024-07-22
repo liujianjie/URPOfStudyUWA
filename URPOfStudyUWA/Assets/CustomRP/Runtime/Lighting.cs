@@ -77,11 +77,9 @@ public class Lighting
     /// <param name="light"></param>
     void SetupPointLight(int index, ref VisibleLight visibleLight)
     {
-        dirLightColors[index] = visibleLight.finalColor;
-        //通过VisibleLight.localToWorldMatrix属性找到前向矢量,它在矩阵第三列，还要进行取反
-        dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
-        //存储阴影数据
-        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
+        otherLightColors[index] = visibleLight.finalColor;
+        // 位置信息在本地到世界转换矩阵的第四列（最后一列）
+        otherLightPositions[index] = visibleLight.localToWorldMatrix.GetColumn(3);
     }
     /// <summary>
     /// 存储并发送所有光源数据
@@ -112,14 +110,14 @@ public class Lighting
                     if (otherLightCount < maxOtherLightCount)
                     {
                         newIndex = otherLightCount;
-                        SetupPointLight(dirLightCount++, ref visibleLight);
+                        SetupPointLight(otherLightCount++, ref visibleLight);
                     }
                     break;
                 case LightType.Spot:
                     //if (otherLightCount < maxOtherLightCount)
                     //{
                     //    newIndex = otherLightCount;
-                    //    SetupSpotLight(dirLightCount++, ref visibleLight);
+                    //    SetupSpotLight(otherLightCount++, ref visibleLight);
                     //}
                     break;
             }
@@ -130,9 +128,18 @@ public class Lighting
         }
 
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
-        buffer.SetGlobalVectorArray(dirLightColorsId, dirLightColors);
-        buffer.SetGlobalVectorArray(dirLightDirectionsId, dirLightDirections);
-        buffer.SetGlobalVectorArray(dirLightShadowDataId, dirLightShadowData);
+        if (dirLightCount > 0)
+        {
+            buffer.SetGlobalVectorArray(dirLightColorsId, dirLightColors);
+            buffer.SetGlobalVectorArray(dirLightDirectionsId, dirLightDirections);
+            buffer.SetGlobalVectorArray(dirLightShadowDataId, dirLightShadowData);
+        }
+        buffer.SetGlobalInt(otherLightCountId, otherLightCount);
+        if (otherLightCount > 0)
+        {
+            buffer.SetGlobalVectorArray(otherLightColorsId, otherLightColors);
+            buffer.SetGlobalVectorArray(otherLightPositionsId, otherLightPositions);
+        }
     }
     //释放申请的RT内存
     public void Cleanup()

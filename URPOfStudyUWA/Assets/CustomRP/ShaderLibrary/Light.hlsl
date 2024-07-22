@@ -59,6 +59,16 @@ Light GetDirectionalLight (int index,Surface surfaceWS, ShadowData shadowData) {
 
 	return light;
 }
+// 获取非定向光源的属性
+Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData)
+{
+    Light light;
+    light.color = _OtherLightColors[index].rgb;
+    float ray = _OtherLightPositions[index].xyz - surfaceWS.position;
+    light.direction = normalize(ray);
+    light.attenuation = 1.0;
+    return light;
+}
 
 
 #endif
