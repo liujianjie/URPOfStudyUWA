@@ -8,15 +8,19 @@ public class CustomRenderPineAsset : RenderPipelineAsset
 {
     // 定义合批状态字段
     [SerializeField]
-    bool useDynamicBatching = true, useGPUInstancing = true, useSRPBathcer = true;
+    bool useDynamicBatching = true, useGPUInstancing = true, useSRPBatcher = true;
 
+    //是否使用逐对象光照
+    [SerializeField]
+    bool useLightsPerObject = true;
     // 阴影设置
     [SerializeField]
     ShadowSettings shadows = default;
     // 重写抽象方法，需要防护一个RenderPipeLine实例对象
     protected override RenderPipeline CreatePipeline()
     {
-        return new CustomRenderPipeline(useDynamicBatching, useGPUInstancing, useSRPBathcer, shadows);
+        //return new CustomRenderPipeline(useDynamicBatching, useGPUInstancing, useSRPBathcer, shadows);
+        return new CustomRenderPipeline(useDynamicBatching, useGPUInstancing, useSRPBatcher, useLightsPerObject, shadows);
     }
 
 }

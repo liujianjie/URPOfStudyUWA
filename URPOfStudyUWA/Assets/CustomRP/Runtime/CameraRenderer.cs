@@ -28,7 +28,7 @@ public partial class CameraRenderer
     /// 相机渲染
     /// </summary>
     public void Render(ScriptableRenderContext context, Camera camera,
-        bool useDynamicBatching, bool useGPUInstancing,ShadowSettings shadowSettings)
+        bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject,ShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -44,7 +44,8 @@ public partial class CameraRenderer
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
 
-        lighting.Setup(context, cullingResults, shadowSettings);
+        //lighting.Setup(context, cullingResults, shadowSettings);
+        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);
         buffer.EndSample(SampleName);
         Setup();
 
