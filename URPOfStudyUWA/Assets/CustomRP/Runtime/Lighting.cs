@@ -79,7 +79,10 @@ public class Lighting
     {
         otherLightColors[index] = visibleLight.finalColor;
         // 位置信息在本地到世界转换矩阵的第四列（最后一列）
-        otherLightPositions[index] = visibleLight.localToWorldMatrix.GetColumn(3);
+        Vector4 position = visibleLight.localToWorldMatrix.GetColumn(3);
+        // 将光照范围的平方的倒数存储在光源位置的w分量重
+        position.w = 1f / Mathf.Max(visibleLight.range * visibleLight.range, 0.00001f);
+        otherLightPositions[index] = position;
     }
     /// <summary>
     /// 存储并发送所有光源数据

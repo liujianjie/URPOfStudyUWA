@@ -69,7 +69,9 @@ Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData)
     light.direction = normalize(ray);
 	// 光照强度随着距离衰减
     float distanceSqr = max(dot(ray, ray), 0.00001);
-    light.attenuation = 1.0 / distanceSqr;
+	// 套用公式计算随光照范围衰减曲线
+    float rangeAttenuation = Square(saturate(1.0 - Square(distanceSqr * _OtherLightPositions[index].w)));
+    light.attenuation = rangeAttenuation / distanceSqr;
     //light.attenuation = 1.0f;
     return light;
 }
