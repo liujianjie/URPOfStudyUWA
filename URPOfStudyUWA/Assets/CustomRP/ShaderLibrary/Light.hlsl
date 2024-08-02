@@ -3,7 +3,7 @@
 #define CUSTOM_LIGHT_INCLUDED
 
 #define MAX_DIRECTIONAL_LIGHT_COUNT 4
-#define MAX_OTHER_LIGHT_COUNT 4
+#define MAX_OTHER_LIGHT_COUNT 64
 CBUFFER_START(_CustomLight)
 	int _DirectionalLightCount;
 	//定向光源颜色、方向、阴影等数据

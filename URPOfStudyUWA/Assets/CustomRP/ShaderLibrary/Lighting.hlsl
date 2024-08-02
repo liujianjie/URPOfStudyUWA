@@ -32,6 +32,7 @@ float3 GetLighting(Surface surfaceWS, BRDF brdf,  GI gi) {
     {
         Light light = GetOtherLight(j, surfaceWS, shadowData);
         color += GetLighting(surfaceWS, brdf, light);
+        //color = float3(0.5f,0.5f,0.5f);
 
     }
     return color;
