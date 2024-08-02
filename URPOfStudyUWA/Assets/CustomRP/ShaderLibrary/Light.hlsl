@@ -64,7 +64,8 @@ Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData)
 {
     Light light;
     light.color = _OtherLightColors[index].rgb;
-    float ray = _OtherLightPositions[index].xyz - surfaceWS.position;
+	// float3写错成float，导致无法获取到正确的光源位置，从而错误
+    float3 ray = _OtherLightPositions[index].xyz - surfaceWS.position;
     light.direction = normalize(ray);
     light.attenuation = 1.0;
     return light;
