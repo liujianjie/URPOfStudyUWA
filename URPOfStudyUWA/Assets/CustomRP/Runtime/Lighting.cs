@@ -26,6 +26,9 @@ public class Lighting
     static int otherLightCountId = Shader.PropertyToID("_OtherLightCount");
     static int otherLightColorsId = Shader.PropertyToID("_OtherLightColors");
     static int otherLightPositionsId = Shader.PropertyToID("_OtherLightPositions");
+
+    // 聚光灯的光照方向
+    static int otherLigthDirectionsId = Shader.PropertyToID("_OtherLightDirections");
     //存储定向光的颜色和方向
     static Vector4[] dirLightColors = new Vector4[maxDirLightCount];
     static Vector4[] dirLightDirections = new Vector4[maxDirLightCount];
@@ -35,6 +38,8 @@ public class Lighting
     //存储其它类型光源的颜色和位置数据
     static Vector4[] otherLightColors = new Vector4[maxOtherLightCount];
     static Vector4[] otherLightPositions = new Vector4[maxOtherLightCount];
+
+    static Vector4[] otherLightDirections = new Vector4[maxOtherLightCount];
     //存储相机剔除后的结果
     CullingResults cullingResults;
 
@@ -85,6 +90,24 @@ public class Lighting
         otherLightPositions[index] = position;
     }
     /// <summary>
+    /// 存储聚光灯光源的数据
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="visibleIndex"></param>
+    /// <param name="visibleLight"></param>
+    /// <param name="light"></param>
+    void SetupSpotLight(int index, ref VisibleLight visibleLight)
+    {
+        otherLightColors[index] = visibleLight.finalColor;
+        // 位置信息在本地到世界转换矩阵的第四列（最后一列）
+        Vector4 position = visibleLight.localToWorldMatrix.GetColumn(3);
+        // 将光照范围的平方的倒数存储在光源位置的w分量重
+        position.w = 1f / Mathf.Max(visibleLight.range * visibleLight.range, 0.00001f);
+        otherLightPositions[index] = position;
+        // 本地到世界的转换矩阵的第三列再求反得到光照方向
+        otherLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+    }
+    /// <summary>
     /// 存储并发送所有光源数据
     /// </summary>
     /// <param name="useLightsPerObject"></param>
@@ -117,11 +140,11 @@ public class Lighting
                     }
                     break;
                 case LightType.Spot:
-                    //if (otherLightCount < maxOtherLightCount)
-                    //{
-                    //    newIndex = otherLightCount;
-                    //    SetupSpotLight(otherLightCount++, ref visibleLight);
-                    //}
+                    if (otherLightCount < maxOtherLightCount)
+                    {
+                        newIndex = otherLightCount;
+                        SetupSpotLight(otherLightCount++, ref visibleLight);
+                    }
                     break;
             }
             if (visibleLight.lightType == LightType.Directional)
@@ -142,6 +165,7 @@ public class Lighting
         {
             buffer.SetGlobalVectorArray(otherLightColorsId, otherLightColors);
             buffer.SetGlobalVectorArray(otherLightPositionsId, otherLightPositions);
+            buffer.SetGlobalVectorArray(otherLigthDirectionsId, otherLightDirections);
         }
     }
     //释放申请的RT内存

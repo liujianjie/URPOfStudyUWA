@@ -15,6 +15,7 @@ CBUFFER_START(_CustomLight)
 	int _OtherLightCount;
 	float4 _OtherLightColors[MAX_OTHER_LIGHT_COUNT];
 	float4 _OtherLightPositions[MAX_OTHER_LIGHT_COUNT];
+	float4 _OtherLightDirections[MAX_OTHER_LIGHT_COUNT];
 CBUFFER_END
 
 //灯光的属性
@@ -72,6 +73,11 @@ Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData)
 	// 套用公式计算随光照范围衰减曲线
     float rangeAttenuation = Square(saturate(1.0 - Square(distanceSqr * _OtherLightPositions[index].w)));
     light.attenuation = rangeAttenuation / distanceSqr;
+	// 得到聚光灯衰减
+    float spotAttenuation = saturate(dot(_OtherLightDirections[index].xyz, light.direction));
+	// 光照强度随范围和距离衰减	
+    light.attenuation = spotAttenuation * rangeAttenuation / distanceSqr;
+	
     //light.attenuation = 1.0f;
     return light;
 }
