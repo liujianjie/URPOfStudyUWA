@@ -29,6 +29,7 @@ public class Lighting
 
     // 聚光灯的光照方向
     static int otherLigthDirectionsId = Shader.PropertyToID("_OtherLightDirections");
+    static int otherLigthSpotAnglesId = Shader.PropertyToID("_OtherLightSpotAngles");
     //存储定向光的颜色和方向
     static Vector4[] dirLightColors = new Vector4[maxDirLightCount];
     static Vector4[] dirLightDirections = new Vector4[maxDirLightCount];
@@ -40,6 +41,7 @@ public class Lighting
     static Vector4[] otherLightPositions = new Vector4[maxOtherLightCount];
 
     static Vector4[] otherLightDirections = new Vector4[maxOtherLightCount];
+    static Vector4[] otherLightSpotAngles = new Vector4[maxOtherLightCount];
     //存储相机剔除后的结果
     CullingResults cullingResults;
 
@@ -88,9 +90,11 @@ public class Lighting
         // 将光照范围的平方的倒数存储在光源位置的w分量重
         position.w = 1f / Mathf.Max(visibleLight.range * visibleLight.range, 0.00001f);
         otherLightPositions[index] = position;
+
+        otherLightSpotAngles[index] = new Vector4(0f, 1f);
     }
     /// <summary>
-    /// 存储聚光灯光源的数据
+    /// 存储聚光灯光源的数据:颜色、位置、方向、角度
     /// </summary>
     /// <param name="index"></param>
     /// <param name="visibleIndex"></param>
@@ -106,6 +110,12 @@ public class Lighting
         otherLightPositions[index] = position;
         // 本地到世界的转换矩阵的第三列再求反得到光照方向
         otherLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+
+        Light light = visibleLight.light;
+        float innerCos = Mathf.Cos(Mathf.Deg2Rad * 0.5f * light.innerSpotAngle);
+        float outerCos = Mathf.Cos(Mathf.Deg2Rad * 0.5f * visibleLight.spotAngle);
+        float angleRangeInv = 1f / Mathf.Max(innerCos - outerCos, 0.001f);
+        otherLightSpotAngles[index] = new Vector4(angleRangeInv, -outerCos * angleRangeInv);
     }
     /// <summary>
     /// 存储并发送所有光源数据
@@ -166,6 +176,7 @@ public class Lighting
             buffer.SetGlobalVectorArray(otherLightColorsId, otherLightColors);
             buffer.SetGlobalVectorArray(otherLightPositionsId, otherLightPositions);
             buffer.SetGlobalVectorArray(otherLigthDirectionsId, otherLightDirections);
+            buffer.SetGlobalVectorArray(otherLigthSpotAnglesId, otherLightSpotAngles);
         }
     }
     //释放申请的RT内存
