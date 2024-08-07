@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 /// <summary>
 /// 自定义渲染管线实例
 /// </summary>
-public class CustomRenderPipeline : RenderPipeline
+public partial class CustomRenderPipeline : RenderPipeline
 {
     CameraRenderer renderer = new CameraRenderer();
     bool useDynamicBatching, useGPUInstancing;
@@ -21,6 +21,8 @@ public class CustomRenderPipeline : RenderPipeline
         GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
         //灯光使用线性强度
         GraphicsSettings.lightsUseLinearIntensity = true;
+
+        InitializeForEditor();
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
