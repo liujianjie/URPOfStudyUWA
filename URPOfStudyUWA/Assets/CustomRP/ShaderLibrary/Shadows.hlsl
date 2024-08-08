@@ -45,6 +45,12 @@ struct DirectionalShadowData {
 	float normalBias;
 	int shadowMaskChannel;
 };
+// 其它光源的阴影数据
+struct OtherShadowData
+{
+    float strength;
+    int shadowMaskChannel;
+};
 
 // 烘焙阴影谁
 struct ShadowMask
@@ -162,6 +168,26 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
     }
     return shadow;
 }
+
+// 得到其它类型光源的阴影衰减
+float GetOtherShadowAttenuation(OtherShadowData other, ShadowData global, Surface surfaceWS)
+{ 
+	//如果材质没有定义接受阴影的宏
+#if !defined(_RECEIVE_SHADOWS)
+    return 1.0;
+#endif
+    float shadow;
+    if (other.strength > 0.0)
+    {
+        shadow = GetBakedShadow(global.shadowMask, other.shadowMaskChannel, other.strength);
+    }
+    else
+    {
+        shadow = 1.0;
+    }
+    return shadow;
+}
+
 //公式计算阴影过渡时的强度
 float FadedShadowStrength (float distance, float scale, float fade) {
 	return saturate((1.0 - distance * scale) * fade);

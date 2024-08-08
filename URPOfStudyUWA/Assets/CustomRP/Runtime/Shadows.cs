@@ -145,6 +145,25 @@ public class Shadows
         }
         return new Vector4(0f, 0f, 0f, -1f);
     }
+    /// <summary>
+    /// 存储其它类型光源的阴影数据
+    /// </summary>
+    /// <param name="light"></param>
+    /// <param name="visibleLightIndex"></param>
+    /// <returns></returns>
+    public Vector4 ReserveOtherShadows(Light light, int visibleLightIndex)
+    {
+        if (light.shadows != LightShadows.None && light.shadowStrength > 0f)
+        {
+            LightBakingOutput lightbBaking = light.bakingOutput;
+            if (lightbBaking.lightmapBakeType == LightmapBakeType.Mixed && lightbBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
+            {
+                useShadowMask = true;
+                return new Vector4(light.shadowStrength, 0f, 0f, lightbBaking.occlusionMaskChannel);
+            }
+        }
+        return new Vector4(0f, 0f, 0f, -1f);
+    }
 
     /// <summary>
     /// 渲染阴影

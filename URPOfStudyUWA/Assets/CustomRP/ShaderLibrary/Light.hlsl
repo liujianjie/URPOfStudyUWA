@@ -17,6 +17,7 @@ CBUFFER_START(_CustomLight)
 	float4 _OtherLightPositions[MAX_OTHER_LIGHT_COUNT];
 	float4 _OtherLightDirections[MAX_OTHER_LIGHT_COUNT];
 	float4 _OtherLightSpotAngles[MAX_OTHER_LIGHT_COUNT];
+	float4 _OtherLightShadowData[MAX_OTHER_LIGHT_COUNT];
 CBUFFER_END
 
 //灯光的属性
@@ -47,6 +48,14 @@ DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadow
 	data.normalBias = _DirectionalLightShadowData[lightIndex].z;
 	data.shadowMaskChannel = _DirectionalLightShadowData[lightIndex].w;
 	return data;
+}
+//获取其它类型光的阴影数据
+OtherShadowData GetOtherShadowData(int lightIndex)
+{
+    OtherShadowData data;;
+    data.strength = _OtherLightShadowData[lightIndex].x;
+    data.shadowMaskChannel = _OtherLightShadowData[lightIndex].w;
+    return data;
 }
 
 //获取目标索引定向光的属性
@@ -84,6 +93,10 @@ Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData)
     spotAttenuation = Square(saturate(dot(_OtherLightDirections[index].xyz, light.direction) * spotAngles.x + spotAngles.y));
 	// 光照强度随范围和距离衰减
 	light.attenuation = spotAttenuation * rangeAttenuation / distanceSqr;
+	
+    OtherShadowData otherShadowData = GetOtherShadowData(index);
+	// 光照强度随范围和距离衰减,加上了阴影
+	light.attenuation = GetOtherShadowAttenuation(otherShadowData, shadowData, surfaceWS) * spotAttenuation * rangeAttenuation / distanceSqr;
 	
     //light.attenuation = 1.0f;
     return light;

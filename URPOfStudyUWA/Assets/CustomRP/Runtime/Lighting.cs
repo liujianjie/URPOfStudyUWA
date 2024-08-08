@@ -26,6 +26,7 @@ public class Lighting
     static int otherLightCountId = Shader.PropertyToID("_OtherLightCount");
     static int otherLightColorsId = Shader.PropertyToID("_OtherLightColors");
     static int otherLightPositionsId = Shader.PropertyToID("_OtherLightPositions");
+    static int otherLightShadowDataId = Shader.PropertyToID("_OtherLightShadowData");
 
     // 聚光灯的光照方向
     static int otherLigthDirectionsId = Shader.PropertyToID("_OtherLightDirections");
@@ -39,6 +40,7 @@ public class Lighting
     //存储其它类型光源的颜色和位置数据
     static Vector4[] otherLightColors = new Vector4[maxOtherLightCount];
     static Vector4[] otherLightPositions = new Vector4[maxOtherLightCount];
+    static Vector4[] otherLightShadowData = new Vector4[maxOtherLightCount];
 
     static Vector4[] otherLightDirections = new Vector4[maxOtherLightCount];
     static Vector4[] otherLightSpotAngles = new Vector4[maxOtherLightCount];
@@ -92,6 +94,10 @@ public class Lighting
         otherLightPositions[index] = position;
 
         otherLightSpotAngles[index] = new Vector4(0f, 1f);
+
+        // 存储阴影数据
+        Light light = visibleLight.light;
+        otherLightShadowData[index] = shadows.ReserveOtherShadows(light, index);
     }
     /// <summary>
     /// 存储聚光灯光源的数据:颜色、位置、方向、角度
@@ -116,6 +122,9 @@ public class Lighting
         float outerCos = Mathf.Cos(Mathf.Deg2Rad * 0.5f * visibleLight.spotAngle);
         float angleRangeInv = 1f / Mathf.Max(innerCos - outerCos, 0.001f);
         otherLightSpotAngles[index] = new Vector4(angleRangeInv, -outerCos * angleRangeInv);
+
+        // 存储阴影数据
+        otherLightShadowData[index] = shadows.ReserveOtherShadows(light, index);
     }
     /// <summary>
     /// 存储并发送所有光源数据
@@ -177,6 +186,7 @@ public class Lighting
             buffer.SetGlobalVectorArray(otherLightPositionsId, otherLightPositions);
             buffer.SetGlobalVectorArray(otherLigthDirectionsId, otherLightDirections);
             buffer.SetGlobalVectorArray(otherLigthSpotAnglesId, otherLightSpotAngles);
+            buffer.SetGlobalVectorArray(otherLightShadowDataId, otherLightShadowData);
         }
     }
     //释放申请的RT内存
