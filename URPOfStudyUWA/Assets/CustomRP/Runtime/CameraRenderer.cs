@@ -28,7 +28,7 @@ public partial class CameraRenderer
     /// 相机渲染
     /// </summary>
     public void Render(ScriptableRenderContext context, Camera camera,
-        bool useDynamicBatching, bool useGPUInstancing,ShadowSettings shadowSettings)
+        bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObejct, ShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -49,7 +49,7 @@ public partial class CameraRenderer
         Setup();
 
         //绘制几何体
-        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
+        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing, useLightsPerObejct);
         //绘制SRP不支持的内置shader类型
         DrawUnsupportedShaders();
 
@@ -65,8 +65,9 @@ public partial class CameraRenderer
     /// <summary>
     /// 绘制几何体
     /// </summary>
-    void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
+    void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject)
     {
+        PerObjectData lightsPerObjectFlags = useLightsPerObject ? PerObjectData.LightData | PerObjectData.LightIndices : PerObjectData.None;
         //设置绘制顺序和指定渲染相机
         var sortingSettings = new SortingSettings(camera)
         {
@@ -83,6 +84,7 @@ public partial class CameraRenderer
             | PerObjectData.LightProbeProxyVolume 
             | PerObjectData.OcclusionProbeProxyVolume
             | PerObjectData.ReflectionProbes
+            | lightsPerObjectFlags
         };
         //渲染CustomLit表示的pass块
         drawingSettings.SetShaderPassName(1, litShaderTagId);
