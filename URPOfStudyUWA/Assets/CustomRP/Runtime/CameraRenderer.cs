@@ -43,8 +43,8 @@ public partial class CameraRenderer
         }
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
-
-        lighting.Setup(context, cullingResults, shadowSettings);
+        // 光源数据和阴影数据发送到GPU计算光照
+        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObejct);
         buffer.EndSample(SampleName);
         Setup();
 

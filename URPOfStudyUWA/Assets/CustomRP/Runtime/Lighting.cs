@@ -28,6 +28,8 @@ public class Lighting
     static int otherLightPositionsId = Shader.PropertyToID("_OtherLightPositions");
     static int otherLightShadowDataId = Shader.PropertyToID("_OtherLightShadowData");
 
+    static string lightsPerObjectKeyword = "_LIGHTS_PER_OBJECT";
+
     // 聚光灯的光照方向
     static int otherLigthDirectionsId = Shader.PropertyToID("_OtherLightDirections");
     static int otherLigthSpotAnglesId = Shader.PropertyToID("_OtherLightSpotAngles");
@@ -49,14 +51,14 @@ public class Lighting
 
     Shadows shadows = new Shadows();
     //初始化设置
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults,ShadowSettings shadowSettings)
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults,ShadowSettings shadowSettings, bool useLightsPerObject)
 	{
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
         //阴影的初始化设置
         shadows.Setup(context, cullingResults, shadowSettings);
         //存储并发送所有光源数据
-        SetupLights();
+        SetupLights(useLightsPerObject);
         //渲染阴影
         shadows.Render();
         buffer.EndSample(bufferName);
@@ -131,12 +133,16 @@ public class Lighting
     /// </summary>
     /// <param name="useLightsPerObject"></param>
     /// <param name="renderingLayerMask"></param>
-    void SetupLights() {
+    void SetupLights(bool useLightsPerObject) {
+
+        // 得到光源索引列表
+        NativeArray<int> indexMap = useLightsPerObject ? cullingResults.GetLightIndexMap(Allocator.Temp) : default;
         //得到所有影响相机渲染物体的可见光数据
         NativeArray<VisibleLight> visibleLights = cullingResults.visibleLights;
         
         int dirLightCount = 0, otherLightCount = 0;
-        for (int i = 0; i < visibleLights.Length; i++)
+        int i;
+        for (i = 0; i < visibleLights.Length; i++)
         {
             int newIndex = -1;
             VisibleLight visibleLight = visibleLights[i];
@@ -166,10 +172,27 @@ public class Lighting
                     }
                     break;
             }
-            if (visibleLight.lightType == LightType.Directional)
+            // 匹配光源索引
+            if (useLightsPerObject)
             {
-
+                indexMap[i] = newIndex;
             }
+        }
+        // 消除所有不可见光的索引
+        if (useLightsPerObject)
+        {
+            for(; i < indexMap.Length; i++)
+            {
+                indexMap[i] = -1;
+            }
+            // 最后重新设置调整后的灯光索引列表，发给Unity，然后indexmap就不需要了，进行释放
+            cullingResults.SetLightIndexMap(indexMap);
+            indexMap.Dispose();
+            Shader.EnableKeyword(lightsPerObjectKeyword);
+        }
+        else
+        {
+            Shader.DisableKeyword(lightsPerObjectKeyword);
         }
 
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
