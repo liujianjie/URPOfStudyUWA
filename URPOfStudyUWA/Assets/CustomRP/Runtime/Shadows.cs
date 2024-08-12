@@ -101,6 +101,28 @@ public class Shadows
     static int otherShadowMatricesId = Shader.PropertyToID("_OtherShadowMatrices");
     static Matrix4x4[] otherShadowMatrices = new Matrix4x4[maxShadowedOtherLightCount];
     Vector4 atlasSizes;
+
+    // 非定向光的阴影结构体
+    private struct ShadowedOtherLight
+    {
+        //可见光索引
+        public int visibleLightIndex;
+
+        //斜度比例偏差值
+        public float slopeScaleBias;
+
+        // 法线偏移
+        public float normalBias;
+
+        //近平面偏移
+        public float nearPlaneOffset;
+
+        // 是否为点光源
+        public bool isPoint;
+    }
+    // 存储可投射阴影的非定向光源的数据
+    ShadowedOtherLight[] shadowedOtherLights = new ShadowedOtherLight[maxShadowedOtherLightCount];
+
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings
@@ -189,6 +211,12 @@ public class Shadows
             // 返回负的阴影强度和mask通道
             return new Vector4(-light.shadowStrength, 0f, 0f, maskChannel);
         }
+        shadowedOtherLights[shadowedOtherLightCount] = new ShadowedOtherLight
+        {
+            visibleLightIndex = visibleLightIndex,
+            slopeScaleBias = light.shadowBias,
+            normalBias = light.shadowNormalBias
+        };
         // 始终返回阴影强度和通道
         return new Vector4(light.shadowStrength, shadowedOtherLightCount++, 0f, maskChannel);
     }
@@ -238,6 +266,9 @@ public class Shadows
     private void RenderDirectionalShadows()
     {
         int atlasSize = (int)settings.directional.atlasSize;
+        atlasSizes.x = atlasSize;
+        atlasSizes.y = 1f / atlasSize;
+
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
         //指定渲染的阴影数据存储到阴影图集中
         buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
@@ -283,7 +314,7 @@ public class Shadows
     {
         // 创建renderTexture
         int atlasSize = (int)settings.other.atlasSize;
-        atlasSizes.z = atlasSize;
+        atlasSizes.z = atlasSize;           
         atlasSizes.w = 1f / atlasSize;
 
         buffer.GetTemporaryRT(otherShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
@@ -301,7 +332,7 @@ public class Shadows
         //遍历所有光源渲染阴影贴图
         for (int i = 0; i < shadowedOtherLightCount; i++)
         {
-            //RenderDirectionalShadows(i, split, tileSize);
+            RenderSpotShadows(i, split, tileSize);
         }
         //发送阴影转换矩阵gpu
         buffer.SetGlobalMatrixArray(otherShadowMatricesId, otherShadowMatrices);
@@ -358,6 +389,30 @@ public class Shadows
         }
     }
 
+    /// <summary>
+    /// 渲染聚光灯阴影
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="split"></param>
+    /// <param name="tileSize"></param>
+    private void RenderSpotShadows(int index, int split, int tileSize)
+    {
+        ShadowedOtherLight light = shadowedOtherLights[index];
+        var shadowSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
+        cullingResults.ComputeSpotShadowMatricesAndCullingPrimitives(light.visibleLightIndex, out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
+        shadowSettings.splitData = splitData;
+        otherShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(index, split, tileSize), split);
+
+        // 设置视图投影矩阵
+        buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
+        // 设置斜度比例偏差值
+        buffer.SetGlobalDepthBias(0f, light.slopeScaleBias);
+
+        // 绘制阴影
+        ExecuteBuffer();
+        context.DrawShadows(ref shadowSettings);
+        buffer.SetGlobalDepthBias(0f, 0f);
+    }
     /// <summary>
     /// 设置级联数据
     /// </summary>

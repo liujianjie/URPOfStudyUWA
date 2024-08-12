@@ -72,12 +72,12 @@ public class Lighting
     /// <param name="visibleIndex"></param>
     /// <param name="visibleLight"></param>
     /// <param name="light"></param>
-	void SetupDirectionalLight(int index, ref VisibleLight visibleLight) {
+	void SetupDirectionalLight(int index, int visibleIndex, ref VisibleLight visibleLight) {
         dirLightColors[index] = visibleLight.finalColor;
         //通过VisibleLight.localToWorldMatrix属性找到前向矢量,它在矩阵第三列，还要进行取反
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
         //存储阴影数据
-        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
+        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, visibleIndex);
     }
     /// <summary>
     /// 存储点光源的数据
@@ -86,7 +86,7 @@ public class Lighting
     /// <param name="visibleIndex"></param>
     /// <param name="visibleLight"></param>
     /// <param name="light"></param>
-    void SetupPointLight(int index, ref VisibleLight visibleLight)
+    void SetupPointLight(int index, int visibleIndex, ref VisibleLight visibleLight)
     {
         otherLightColors[index] = visibleLight.finalColor;
         // 位置信息在本地到世界转换矩阵的第四列（最后一列）
@@ -99,7 +99,7 @@ public class Lighting
 
         // 存储阴影数据
         Light light = visibleLight.light;
-        otherLightShadowData[index] = shadows.ReserveOtherShadows(light, index);
+        otherLightShadowData[index] = shadows.ReserveOtherShadows(light, visibleIndex);
     }
     /// <summary>
     /// 存储聚光灯光源的数据:颜色、位置、方向、角度
@@ -108,7 +108,7 @@ public class Lighting
     /// <param name="visibleIndex"></param>
     /// <param name="visibleLight"></param>
     /// <param name="light"></param>
-    void SetupSpotLight(int index, ref VisibleLight visibleLight)
+    void SetupSpotLight(int index, int visibleIndex, ref VisibleLight visibleLight)
     {
         otherLightColors[index] = visibleLight.finalColor;
         // 位置信息在本地到世界转换矩阵的第四列（最后一列）
@@ -126,7 +126,7 @@ public class Lighting
         otherLightSpotAngles[index] = new Vector4(angleRangeInv, -outerCos * angleRangeInv);
 
         // 存储阴影数据
-        otherLightShadowData[index] = shadows.ReserveOtherShadows(light, index);
+        otherLightShadowData[index] = shadows.ReserveOtherShadows(light, visibleIndex);
     }
     /// <summary>
     /// 存储并发送所有光源数据
@@ -154,21 +154,21 @@ public class Lighting
                     if (dirLightCount < maxDirLightCount)
                     {
                         newIndex = otherLightCount;
-                        SetupDirectionalLight(dirLightCount++, ref visibleLight);
+                        SetupDirectionalLight(dirLightCount++, i, ref visibleLight);
                     }
                     break;
                 case LightType.Point:
                     if (otherLightCount < maxOtherLightCount)
                     {
                         newIndex = otherLightCount;
-                        SetupPointLight(otherLightCount++, ref visibleLight);
+                        SetupPointLight(otherLightCount++, i, ref visibleLight);
                     }
                     break;
                 case LightType.Spot:
                     if (otherLightCount < maxOtherLightCount)
                     {
                         newIndex = otherLightCount;
-                        SetupSpotLight(otherLightCount++, ref visibleLight);
+                        SetupSpotLight(otherLightCount++, i, ref visibleLight);
                     }
                     break;
             }
