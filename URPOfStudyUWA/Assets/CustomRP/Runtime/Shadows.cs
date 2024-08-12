@@ -177,6 +177,13 @@ public class Shadows
         // 是否使用阴影蒙版
         buffer.BeginSample(bufferName);
         SetKeywords(shadowMaskKeywords, useShadowMask ?  QualitySettings.shadowmaskMode == ShadowmaskMode.Shadowmask ? 0 : 1: -1);
+
+        // 发送级联数量
+        buffer.SetGlobalInt(cascadeCountId, ShadowedDirectionalLightCount > 0 ? settings.directional.cascadeCount : 0);
+        // 阴影距离过度相关数据发送GPU
+        float f = 1f - settings.directional.cascadeFade;
+        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade, 1f / (1f - f * f)));
+
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
@@ -204,16 +211,16 @@ public class Shadows
         {
             RenderDirectionalShadows(i, split, tileSize);
         }
-
-        buffer.SetGlobalInt(cascadeCountId, settings.directional.cascadeCount);
+        // 将级联计数发送到GPU
+        //buffer.SetGlobalInt(cascadeCountId, settings.directional.cascadeCount);
         buffer.SetGlobalVectorArray(cascadeCullingSpheresId, cascadeCullingSpheres);
         //发送级联数据
         buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
         //发送阴影转换矩阵
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
         //最大阴影距离和淡入距离发送GPU
-        float f = 1f - settings.directional.cascadeFade;
-        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade, 1f / (1f - f * f)));
+        //float f = 1f - settings.directional.cascadeFade;
+        //buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade, 1f / (1f - f * f)));
 
         //设置关键字
         SetKeywords(directionalFilterKeywords, (int)settings.directional.filter - 1);

@@ -169,6 +169,12 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
     return shadow;
 }
 
+// 得到非定向光源的实时阴影衰减
+float GetOtherShadow(OtherShadowData other, ShadowData global, Surface surfaceWS)
+{
+    return 1.0f;
+}
+
 // 得到其它类型光源的阴影衰减
 float GetOtherShadowAttenuation(OtherShadowData other, ShadowData global, Surface surfaceWS)
 { 
@@ -183,7 +189,8 @@ float GetOtherShadowAttenuation(OtherShadowData other, ShadowData global, Surfac
     }
     else
     {
-        shadow = 1.0;
+        shadow = GetOtherShadow(other, global, surfaceWS);
+        shadow = MixBakedAndRealtimeShadows(global, shadow, other.shadowMaskChannel, other.strength);
     }
     return shadow;
 }
@@ -220,8 +227,8 @@ ShadowData GetShadowData (Surface surfaceWS) {
 		
 		}
 	}
-	//如果超出级联层数，不进行阴影采样
-	if (i == _CascadeCount) {
+	//如果超出级联层数,且级联数量大于0，将全局阴影强度设为0（不进行阴影采样）
+	if (i == _CascadeCount && _CascadeCount > 0) {
 		data.strength = 0.0;
 	}
 #if defined(_CASCADE_BLEND_DITHER)
@@ -235,6 +242,7 @@ ShadowData GetShadowData (Surface surfaceWS) {
 	data.cascadeIndex = i;
 	return data;
 }
+
 
 
 #endif
