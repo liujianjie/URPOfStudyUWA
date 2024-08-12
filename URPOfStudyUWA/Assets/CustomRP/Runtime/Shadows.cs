@@ -85,6 +85,11 @@ public class Shadows
     private static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
 
     bool useShadowMask;
+
+    // 可投射阴影的非定向光源最大数量
+    const int maxShadowedOtherLightCount = 16;
+    // 已经存在可投射阴影的非定向光源数量
+    int shadowedOtherLightCount;
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings
@@ -97,6 +102,8 @@ public class Shadows
         ShadowedDirectionalLightCount = 0;
 
         useShadowMask = false;
+
+        shadowedOtherLightCount = 0;
     }
 
     /// <summary>
@@ -153,16 +160,26 @@ public class Shadows
     /// <returns></returns>
     public Vector4 ReserveOtherShadows(Light light, int visibleLightIndex)
     {
-        if (light.shadows != LightShadows.None && light.shadowStrength > 0f)
+        if (light.shadows == LightShadows.None || light.shadowStrength <= 0f)
         {
-            LightBakingOutput lightbBaking = light.bakingOutput;
-            if (lightbBaking.lightmapBakeType == LightmapBakeType.Mixed && lightbBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
-            {
-                useShadowMask = true;
-                return new Vector4(light.shadowStrength, 0f, 0f, lightbBaking.occlusionMaskChannel);
-            }
+            return new Vector4(0f, 0f, 0f, -1f);
         }
-        return new Vector4(0f, 0f, 0f, -1f);
+        float maskChannel = -1f;
+        LightBakingOutput lightBaking = light.bakingOutput;
+        if (lightBaking.lightmapBakeType == LightmapBakeType.Mixed && lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
+        {
+            useShadowMask = true;
+            maskChannel = lightBaking.occlusionMaskChannel;
+            //return new Vector4(light.shadowStrength, 0f, 0f, lightBaking.occlusionMaskChannel);
+        }
+        // 非定向光源数量是否超过了设置的最大数量或者是否没有阴影需要渲染
+        if (shadowedOtherLightCount >= maxShadowedDirectionalLightCount || !cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
+        {
+            // 返回负的阴影强度和mask通道
+            return new Vector4(-light.shadowStrength, 0f, 0f, maskChannel);
+        }
+        // 始终返回阴影强度和通道
+        return new Vector4(light.shadowStrength, shadowedOtherLightCount++, 0f, maskChannel);
     }
 
     /// <summary>
