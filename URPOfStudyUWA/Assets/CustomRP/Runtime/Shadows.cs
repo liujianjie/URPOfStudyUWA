@@ -90,6 +90,17 @@ public class Shadows
     const int maxShadowedOtherLightCount = 16;
     // 已经存在可投射阴影的非定向光源数量
     int shadowedOtherLightCount;
+
+    //非定向光源的PCF滤波模式
+    private static string[] otherFilterKeywords = {
+        "_OTHER_PCF3",
+        "_OTHER_PCF5",
+        "_OTHER_PCF7",
+    };
+    static int otherShadowAtlasId = Shader.PropertyToID("_OtherShadowAtlas");
+    static int otherShadowMatricesId = Shader.PropertyToID("_OtherShadowMatrices");
+    static Matrix4x4[] otherShadowMatrices = new Matrix4x4[maxShadowedOtherLightCount];
+    Vector4 atlasSizes;
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings
@@ -191,6 +202,20 @@ public class Shadows
         {
             RenderDirectionalShadows();
         }
+        else
+        {
+            buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        }
+
+        if (shadowedOtherLightCount > 0)
+        {
+            RenderOtherShadows();
+        }
+        else
+        {
+            buffer.SetGlobalTexture(otherShadowAtlasId, dirShadowAtlasId);
+        }
+
         // 是否使用阴影蒙版
         buffer.BeginSample(bufferName);
         SetKeywords(shadowMaskKeywords, useShadowMask ?  QualitySettings.shadowmaskMode == ShadowmaskMode.Shadowmask ? 0 : 1: -1);
@@ -200,6 +225,8 @@ public class Shadows
         // 阴影距离过度相关数据发送GPU
         float f = 1f - settings.directional.cascadeFade;
         buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade, 1f / (1f - f * f)));
+        // 发送图集大小和纹素大小
+        buffer.SetGlobalVector(shadowAtlasSizeId, atlasSizes);
 
         buffer.EndSample(bufferName);
         ExecuteBuffer();
@@ -243,7 +270,43 @@ public class Shadows
         SetKeywords(directionalFilterKeywords, (int)settings.directional.filter - 1);
         SetKeywords(cascadeBlendKeywords, (int)settings.directional.cascadeBlend - 1);
         //传递图集大小和纹素大小
-        buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
+        //buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
+
+        buffer.EndSample(bufferName);
+        ExecuteBuffer();
+    }
+
+    /// <summary>
+    /// 渲染非定向光阴影
+    /// </summary>
+    private void RenderOtherShadows()
+    {
+        // 创建renderTexture
+        int atlasSize = (int)settings.other.atlasSize;
+        atlasSizes.z = atlasSize;
+        atlasSizes.w = 1f / atlasSize;
+
+        buffer.GetTemporaryRT(otherShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        //指定渲染的阴影数据存储到阴影图集中
+        buffer.SetRenderTarget(otherShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        //清除深度缓冲区
+        buffer.ClearRenderTarget(true, false, Color.clear);
+        // 清除深度缓冲区
+        buffer.BeginSample(bufferName);
+        ExecuteBuffer();
+        //要分割的图块数量和大小
+        int tiles = shadowedOtherLightCount;
+        int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
+        int tileSize = atlasSize / split;
+        //遍历所有光源渲染阴影贴图
+        for (int i = 0; i < shadowedOtherLightCount; i++)
+        {
+            //RenderDirectionalShadows(i, split, tileSize);
+        }
+        //发送阴影转换矩阵gpu
+        buffer.SetGlobalMatrixArray(otherShadowMatricesId, otherShadowMatrices);
+        //设置关键字
+        SetKeywords(otherFilterKeywords, (int)settings.other.filter - 1);
 
         buffer.EndSample(bufferName);
         ExecuteBuffer();
@@ -320,6 +383,10 @@ public class Shadows
     public void Cleanup()
     {
         buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        if (shadowedOtherLightCount > 0)
+        {
+            buffer.ReleaseTemporaryRT(otherShadowAtlasId);
+        }
         ExecuteBuffer();
     }
 
