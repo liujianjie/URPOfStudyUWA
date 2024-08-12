@@ -62,6 +62,7 @@ public class Shadows
 
     private static int shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize");
 
+    private static int shadowPancakingId = Shader.PropertyToID("_ShadowAtlasSize");
     //定向光源的PCF滤波模式
     private static string[] directionalFilterKeywords = {
         "_DIRECTIONAL_PCF3",
@@ -122,6 +123,8 @@ public class Shadows
     }
     // 存储可投射阴影的非定向光源的数据
     ShadowedOtherLight[] shadowedOtherLights = new ShadowedOtherLight[maxShadowedOtherLightCount];
+
+    // 
 
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
@@ -275,6 +278,8 @@ public class Shadows
         //清除深度缓冲区
         buffer.ClearRenderTarget(true, false, Color.clear);
 
+        buffer.SetGlobalFloat(shadowPancakingId, 1f);
+
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
         //要分割的图块数量和大小
@@ -322,6 +327,7 @@ public class Shadows
         buffer.SetRenderTarget(otherShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         //清除深度缓冲区
         buffer.ClearRenderTarget(true, false, Color.clear);
+        buffer.SetGlobalFloat(shadowPancakingId, 0f);
         // 清除深度缓冲区
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
