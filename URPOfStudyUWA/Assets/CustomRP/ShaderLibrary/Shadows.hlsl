@@ -138,7 +138,7 @@ float FilterOtherShadow(float3 positionSTS)
     }
     return shadow;
 #else
-    return SampleDirectionalShadowAtlas(positionSTS);
+    return SampleOtherShadowAtlas(positionSTS);
 #endif
 }
 //得到级联阴影强度抽离
@@ -226,17 +226,17 @@ float GetOtherShadow(OtherShadowData other, ShadowData global, Surface surfaceWS
     return FilterOtherShadow(positionSTS.xyz / positionSTS.w);
 }
 
-// 得到其它类型光源的阴影衰减
+//得到非定向光源的阴影衰减
 float GetOtherShadowAttenuation(OtherShadowData other, ShadowData global, Surface surfaceWS)
-{ 
-	//如果材质没有定义接受阴影的宏
+{
 #if !defined(_RECEIVE_SHADOWS)
     return 1.0;
 #endif
+
     float shadow;
-    if (other.strength > 0.0)
+    if (other.strength * global.strength <= 0.0)
     {
-        shadow = GetBakedShadow(global.shadowMask, other.shadowMaskChannel, other.strength);
+        shadow = GetBakedShadow(global.shadowMask, other.shadowMaskChannel, abs(other.strength));
     }
     else
     {
