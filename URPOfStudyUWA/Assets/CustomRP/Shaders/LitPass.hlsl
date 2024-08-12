@@ -61,7 +61,8 @@ float4 LitPassFragment(Varyings input) : SV_TARGET {
 	//定义一个surface并填充属性
 	Surface surface;
 	surface.position = input.positionWS;
-	surface.normal = normalize(input.normalWS);
+    surface.normal = normalize(input.normalWS);
+    surface.interpolatedNormal = input.normalWS;
 	//得到视角方向
 	surface.viewDirection = normalize(_WorldSpaceCameraPos - input.positionWS);
 	//获取表面深度
