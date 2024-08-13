@@ -57,7 +57,7 @@ OtherShadowData GetOtherShadowData(int lightIndex)
     data.tileIndex = _OtherLightShadowData[lightIndex].y;
     data.shadowMaskChannel = _OtherLightShadowData[lightIndex].w;
     data.lightPositionWS = 0.0;
-    data.spotDirectionaWS = 0.0;
+    data.spotDirectionWS = 0.0;
     return data;
 }
 

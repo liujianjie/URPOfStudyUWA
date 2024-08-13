@@ -228,6 +228,7 @@ float GetOtherShadow(OtherShadowData other, ShadowData global, Surface surfaceWS
     float3 surfaceToLight = other.lightPositionWS - surfaceWS.position;
     // 计算光源到表面的距离
     float distanceToLightPlane = dot(surfaceToLight, other.spotDirectionWS);
+    //distanceToLightPlane = length(surfaceToLight);
     // 用距离来缩放法线偏移
     float3 normalBias = surfaceWS.interpolatedNormal * (distanceToLightPlane * tileData.w);
     float4 positionSTS = mul(_OtherShadowMatrices[other.tileIndex], float4(surfaceWS.position + normalBias, 1.0));
