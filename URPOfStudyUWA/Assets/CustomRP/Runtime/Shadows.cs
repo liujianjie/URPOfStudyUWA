@@ -124,7 +124,9 @@ public class Shadows
     // 存储可投射阴影的非定向光源的数据
     ShadowedOtherLight[] shadowedOtherLights = new ShadowedOtherLight[maxShadowedOtherLightCount];
 
-    // 
+    // 非定向光源阴影图块的着色器标志ID和阴影图块数组
+    static int otherShadowTilesId = Shader.PropertyToID("_OtherShadowTiles");
+    static Vector4[] otherShadowTiles = new Vector4[maxShadowedOtherLightCount];
 
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
@@ -342,6 +344,7 @@ public class Shadows
         }
         //发送阴影转换矩阵gpu
         buffer.SetGlobalMatrixArray(otherShadowMatricesId, otherShadowMatrices);
+        buffer.SetGlobalVectorArray(otherShadowTilesId, otherShadowTiles);
         //设置关键字
         SetKeywords(otherFilterKeywords, (int)settings.other.filter - 1);
 
@@ -407,6 +410,12 @@ public class Shadows
         var shadowSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
         cullingResults.ComputeSpotShadowMatricesAndCullingPrimitives(light.visibleLightIndex, out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
         shadowSettings.splitData = splitData;
+        // 计算法线偏差
+        float texelSize = 2f / (tileSize * projectionMatrix.m00);// 2/ 投影比例
+        float filterSize = texelSize * ((float)settings.other.filter + 1f);
+        float bias = light.normalBias * filterSize * 1.4142136f;
+        SetOtherTileData(index, bias);
+
         otherShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(index, split, tileSize), split);
 
         // 设置视图投影矩阵
@@ -437,7 +446,15 @@ public class Shadows
         cascadeCullingSpheres[index] = cullingSphere;
         cascadeData[index] = new Vector4(1f / cullingSphere.w, filterSize * 1.4142136f);
     }
-
+    /// <summary>
+    /// 存储非定向光阴影图块数据
+    /// </summary>
+    void SetOtherTileData(int index, float bias)
+    {
+        Vector4 data = Vector4.zero;
+        data.w = bias;
+        otherShadowTiles[index] = data;
+    }
     /// <summary>
     /// 释放申请的RT内存
     /// </summary>

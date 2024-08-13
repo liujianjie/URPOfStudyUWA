@@ -54,6 +54,7 @@ float4 _ShadowAtlasSize;
 // 非定向光阴影转换矩阵
 float4x4 _OtherShadowMatrices[MAX_SHADOWED_OTHER_LIGHT_COUNT];
 
+float4 _OtherShadowTiles[MAX_SHADOWED_OTHER_LIGHT_COUNT];
 CBUFFER_END
 //定向光阴影的数据信息
 struct DirectionalShadowData {
@@ -69,6 +70,8 @@ struct OtherShadowData
     float strength;
     int tileIndex;
     int shadowMaskChannel;
+    float3 lightPositionWS;
+    float3 spotDirectionWS;
 };
 
 // 烘焙阴影谁
@@ -220,7 +223,13 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
 // 得到非定向光源的实时阴影衰减
 float GetOtherShadow(OtherShadowData other, ShadowData global, Surface surfaceWS)
 {
-    float3 normalBias = surfaceWS.interpolatedNormal * 0.0;
+    float4 tileData = _OtherShadowTiles[other.tileIndex];
+    // 计算光源到表面的向量
+    float3 surfaceToLight = other.lightPositionWS - surfaceWS.position;
+    // 计算光源到表面的距离
+    float distanceToLightPlane = dot(surfaceToLight, other.spotDirectionWS);
+    // 用距离来缩放法线偏移
+    float3 normalBias = surfaceWS.interpolatedNormal * (distanceToLightPlane * tileData.w);
     float4 positionSTS = mul(_OtherShadowMatrices[other.tileIndex], float4(surfaceWS.position + normalBias, 1.0));
     // 透视投影，变化位置的xyz除以z
     return FilterOtherShadow(positionSTS.xyz / positionSTS.w);
