@@ -210,8 +210,11 @@ public class Shadows
             maskChannel = lightBaking.occlusionMaskChannel;
             //return new Vector4(light.shadowStrength, 0f, 0f, lightBaking.occlusionMaskChannel);
         }
+        bool isPoint = light.type == LightType.Point;
+        int newLightCount = shadowedOtherLightCount + (isPoint ? 6 : 1);
+
         // 非定向光源数量是否超过了设置的最大数量或者是否没有阴影需要渲染
-        if (shadowedOtherLightCount >= maxShadowedDirectionalLightCount || !cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
+        if (newLightCount >= maxShadowedOtherLightCount || !cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             // 返回负的阴影强度和mask通道
             return new Vector4(-light.shadowStrength, 0f, 0f, maskChannel);
@@ -220,10 +223,13 @@ public class Shadows
         {
             visibleLightIndex = visibleLightIndex,
             slopeScaleBias = light.shadowBias,
-            normalBias = light.shadowNormalBias
+            normalBias = light.shadowNormalBias,
+            isPoint = isPoint
         };
+        Vector4 data = new Vector4(light.shadowStrength, shadowedOtherLightCount, isPoint ? 1f : 0f, maskChannel);
+        shadowedOtherLightCount = newLightCount;
         // 始终返回阴影强度和通道
-        return new Vector4(light.shadowStrength, shadowedOtherLightCount++, 0f, maskChannel);
+        return data;
     }
 
     /// <summary>
@@ -340,7 +346,16 @@ public class Shadows
         //遍历所有光源渲染阴影贴图
         for (int i = 0; i < shadowedOtherLightCount; i++)
         {
-            RenderSpotShadows(i, split, tileSize);
+            if (shadowedOtherLights[i].isPoint)
+            {
+                RenderPointShadows(i, split, tileSize);
+                i += 6;
+            }
+            else
+            {
+                RenderSpotShadows(i, split, tileSize);
+                i += 1;
+            }
         }
         //发送阴影转换矩阵gpu
         buffer.SetGlobalMatrixArray(otherShadowMatricesId, otherShadowMatrices);
@@ -432,6 +447,48 @@ public class Shadows
         ExecuteBuffer();
         context.DrawShadows(ref shadowSettings);
         buffer.SetGlobalDepthBias(0f, 0f);
+    }
+    /// <summary>
+    /// 渲染点灯阴影
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="split"></param>
+    /// <param name="tileSize"></param>
+    private void RenderPointShadows(int index, int split, int tileSize)
+    {
+        ShadowedOtherLight light = shadowedOtherLights[index];
+        var shadowSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
+       
+        // 计算法线偏差
+        float texelSize = 2f / tileSize;// 2/ 投影比例
+        float filterSize = texelSize * ((float)settings.other.filter + 1f);
+        float bias = light.normalBias * filterSize * 1.4142136f;
+        // 得到偏移量
+        //Vector2 offset = SetTileViewport(index, split, tileSize);
+        // 得到缩放
+        float tileScale = 1f / split;
+        //SetOtherTileData(index, offset, tileScale, bias);
+
+        for (int i = 0; i < 6; i++)
+        {
+            cullingResults.ComputePointShadowMatricesAndCullingPrimitives(light.visibleLightIndex,(CubemapFace)i,0f, out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
+            shadowSettings.splitData = splitData;
+            int tileIndex = index + i;
+            // 得到偏移量
+            Vector2 offset = SetTileViewport(tileIndex, split, tileSize);
+            SetOtherTileData(tileIndex, offset, tileScale, bias);
+            otherShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, offset, tileScale);
+
+            // 设置视图投影矩阵
+            buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
+            // 设置斜度比例偏差值
+            buffer.SetGlobalDepthBias(0f, light.slopeScaleBias);
+
+            // 绘制阴影
+            ExecuteBuffer();
+            context.DrawShadows(ref shadowSettings);
+            buffer.SetGlobalDepthBias(0f, 0f);
+        }
     }
     /// <summary>
     /// 设置级联数据
