@@ -367,6 +367,7 @@ public class Shadows
         int tileOffset = index * cascadeCount;
         Vector3 ratios = settings.directional.CascadeRatios;
         float cullingFactor = Mathf.Max(0f, 0.8f - settings.directional.cascadeFade);
+        float tileScale = 1f / split;
         for (int i = 0; i < cascadeCount; i++)
         {
             //计算视图和投影矩阵和裁剪空间的立方体
@@ -386,7 +387,7 @@ public class Shadows
             //设置视口图块
             int tileIndex = tileOffset + i;
             //得到从世界空间到阴影纹理图块空间的转换矩阵
-            dirShadowMatrices[tileIndex] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(tileIndex, split, tileSize), split);
+            dirShadowMatrices[tileIndex] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(tileIndex, split, tileSize), tileScale);
             //设置视图投影矩阵
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
             //设置斜度比例偏差值
@@ -414,9 +415,13 @@ public class Shadows
         float texelSize = 2f / (tileSize * projectionMatrix.m00);// 2/ 投影比例
         float filterSize = texelSize * ((float)settings.other.filter + 1f);
         float bias = light.normalBias * filterSize * 1.4142136f;
-        SetOtherTileData(index, bias);
+        // 得到偏移量
+        Vector2 offset = SetTileViewport(index, split, tileSize);
+        // 得到缩放
+        float tileScale = 1f / split;
+        SetOtherTileData(index, offset, tileScale, bias);
 
-        otherShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewport(index, split, tileSize), split);
+        otherShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, offset, tileScale);
 
         // 设置视图投影矩阵
         buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
@@ -449,9 +454,16 @@ public class Shadows
     /// <summary>
     /// 存储非定向光阴影图块数据
     /// </summary>
-    void SetOtherTileData(int index, float bias)
+    void SetOtherTileData(int index, Vector2 offset, float scale, float bias)
     {
+        float border = atlasSizes.w * 0.5f;
         Vector4 data = Vector4.zero;
+        data.x = offset.x * scale + border;
+        data.y = offset.y * scale + border;
+        data.z = scale - border - border;
+        //data.x = 0;
+        //data.y = 0;
+        //data.z = 0;
         data.w = bias;
         otherShadowTiles[index] = data;
     }
@@ -491,7 +503,7 @@ public class Shadows
     /// <param name="offset"></param>
     /// <param name="scale"></param>
     /// <returns></returns>
-    private Matrix4x4 ConvertToAtlasMatrix(Matrix4x4 m, Vector2 offset, int split)
+    private Matrix4x4 ConvertToAtlasMatrix(Matrix4x4 m, Vector2 offset, float scale)
     {
         //如果使用了反向Zbuffer
         if (SystemInfo.usesReversedZBuffer)
@@ -502,7 +514,7 @@ public class Shadows
             m.m23 = -m.m23;
         }
         //设置矩阵坐标
-        float scale = 1f / split;
+        //float scale = 1f / split;
         m.m00 = (0.5f * (m.m00 + m.m30) + offset.x * m.m30) * scale;
         m.m01 = (0.5f * (m.m01 + m.m31) + offset.x * m.m31) * scale;
         m.m02 = (0.5f * (m.m02 + m.m32) + offset.x * m.m32) * scale;
