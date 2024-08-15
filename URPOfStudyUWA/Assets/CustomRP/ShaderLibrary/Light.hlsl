@@ -58,6 +58,8 @@ OtherShadowData GetOtherShadowData(int lightIndex)
     data.shadowMaskChannel = _OtherLightShadowData[lightIndex].w;
     data.lightPositionWS = 0.0;
     data.spotDirectionWS = 0.0;
+    data.isPoint = _OtherLightShadowData[lightIndex].z == 1.0;
+    data.lightDirectionWS = 0.0;
     return data;
 }
 
@@ -100,7 +102,8 @@ Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData)
 	light.attenuation = spotAttenuation * rangeAttenuation / distanceSqr;
 	
     OtherShadowData otherShadowData = GetOtherShadowData(index);
-	otherShadowData.lightPositionWS = position;
+    otherShadowData.lightPositionWS = position;
+    otherShadowData.lightDirectionWS = light.direction;
     otherShadowData.spotDirectionWS = spotDirection;
 	// 光照强度随范围和距离衰减,加上了阴影
 	light.attenuation = GetOtherShadowAttenuation(otherShadowData, shadowData, surfaceWS) * spotAttenuation * rangeAttenuation / distanceSqr;

@@ -30,6 +30,7 @@ float3 GetLighting(Surface surfaceWS, BRDF brdf,  GI gi) {
 	}
 
 	#if defined(_LIGHTS_PER_OBJECT)
+	
 		for (int j = 0; j < min(unity_LightData.y, 8); j++)
 		{
 			int lightIndex = unity_LightIndices[(uint) j / 4][(uint) j % 4];

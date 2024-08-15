@@ -72,6 +72,8 @@ struct OtherShadowData
     int shadowMaskChannel;
     float3 lightPositionWS;
     float3 spotDirectionWS;
+    bool isPoint;
+    float3 lightDirectionWS;            // 物体表面到光源的方向
 };
 
 // 烘焙阴影谁
@@ -221,19 +223,36 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData directional, ShadowD
     }
     return shadow;
 }
-
+static const float3 pointShadowPlanes[6] =
+{
+    float3(-1.0, 0.0, 0.0),
+	float3(1.0, 0.0, 0.0),
+	float3(0.0, -1.0, 0.0),
+	float3(0.0, 1.0, 0.0),
+	float3(0.0, 0.0, -1.0),
+	float3(0.0, 0.0, 1.0)
+};
 // 得到非定向光源的实时阴影衰减
 float GetOtherShadow(OtherShadowData other, ShadowData global, Surface surfaceWS)
 {
-    float4 tileData = _OtherShadowTiles[other.tileIndex];
+    // 调整图块索引和光平面
+    float tileIndex = other.tileIndex;
+    float3 lightPlane = other.spotDirectionWS;
+    if (other.isPoint)
+    {
+        float faceOffset = CubeMapFaceID(-other.lightDirectionWS);
+        tileIndex += faceOffset;
+        lightPlane = pointShadowPlanes[faceOffset];
+    }
+    float4 tileData = _OtherShadowTiles[tileIndex];
     // 计算光源到表面的向量
     float3 surfaceToLight = other.lightPositionWS - surfaceWS.position;
     // 计算光源到表面的距离
-    float distanceToLightPlane = dot(surfaceToLight, other.spotDirectionWS);
+    float distanceToLightPlane = dot(surfaceToLight, lightPlane);
     //distanceToLightPlane = length(surfaceToLight);
     // 用距离来缩放法线偏移
     float3 normalBias = surfaceWS.interpolatedNormal * (distanceToLightPlane * tileData.w);
-    float4 positionSTS = mul(_OtherShadowMatrices[other.tileIndex], float4(surfaceWS.position + normalBias, 1.0));
+    float4 positionSTS = mul(_OtherShadowMatrices[tileIndex], float4(surfaceWS.position + normalBias, 1.0));
     // 透视投影，变化位置的xyz除以z
     return FilterOtherShadow(positionSTS.xyz / positionSTS.w, tileData.xyz);
 }
