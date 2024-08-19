@@ -458,7 +458,7 @@ public class Shadows
     {
         ShadowedOtherLight light = shadowedOtherLights[index];
         var shadowSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
-       
+
         // 计算法线偏差
         float texelSize = 2f / tileSize;// 2/ 投影比例
         float filterSize = texelSize * ((float)settings.other.filter + 1f);
@@ -471,13 +471,13 @@ public class Shadows
 
         for (int i = 0; i < 6; i++)
         {
-            cullingResults.ComputePointShadowMatricesAndCullingPrimitives(light.visibleLightIndex,(CubemapFace)i,0f, out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
+            cullingResults.ComputePointShadowMatricesAndCullingPrimitives(light.visibleLightIndex, (CubemapFace)i, 0f, out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix, out ShadowSplitData splitData);
             shadowSettings.splitData = splitData;
             int tileIndex = index + i;
             // 得到偏移量
             Vector2 offset = SetTileViewport(tileIndex, split, tileSize);
             SetOtherTileData(tileIndex, offset, tileScale, bias);
-            otherShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, offset, tileScale);
+            otherShadowMatrices[tileIndex] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, offset, tileScale);
 
             // 设置视图投影矩阵
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
