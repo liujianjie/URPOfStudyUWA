@@ -137,6 +137,11 @@ public partial class CameraRenderer
 
         if (postFXStack.IsActive)
         {
+            // 始终清除深度和颜色
+            if (flags > CameraClearFlags.Color)
+            {
+                flags = CameraClearFlags.Color;
+            }
             // 设置相机的渲染目标 （用一个RT来存储相机的渲染结果，中间帧缓冲区）
             buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Bilinear, RenderTextureFormat.Default);
             buffer.SetRenderTarget(frameBufferId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
