@@ -64,11 +64,13 @@ public partial class CameraRenderer
         DrawUnsupportedShaders();
 
         //绘制Gizmos
-        DrawGizmos();
+        //DrawGizmos();
+        DrawGizmosBeforeFX();
         if (postFXStack.IsActive)
         {
             postFXStack.Render(frameBufferId);
         }
+        DrawGizmosAfterFX();
         Cleanup();
 
         //提交命令缓冲区
