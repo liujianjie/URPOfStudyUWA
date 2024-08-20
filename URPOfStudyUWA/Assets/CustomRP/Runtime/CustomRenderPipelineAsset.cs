@@ -20,9 +20,12 @@ public class CustomRenderPipelineAsset : RenderPipelineAsset
     [SerializeField]
     ShadowSettings shadows = default;
 
-    //重写抽象方法，需要返回一个RenderPipeline实例对象
+    [SerializeField]
+    PostFXSettings postFXSettings = default;
+
+    // 重写抽象方法，需要防护一个RenderPipeLine实例对象
     protected override RenderPipeline CreatePipeline()
     {
-        return new CustomRenderPipeline(useDynamicBatching, useGPUInstancing, useSRPBatcher, useLightsPerObject, shadows);
+        return new CustomRenderPipeline(useDynamicBatching, useGPUInstancing, useSRPBatcher, useLightsPerObject, shadows, postFXSettings);
     }
 }
