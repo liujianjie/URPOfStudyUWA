@@ -24,11 +24,18 @@ public partial class CameraRenderer
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
     //光照实例
     Lighting lighting = new Lighting();
+
+    // 使用堆栈
+    PostFXStack postFXStack = new PostFXStack();
+    // 相机的帧缓冲区
+    static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
+
     /// <summary>
     /// 相机渲染
     /// </summary>
     public void Render(ScriptableRenderContext context, Camera camera,
-        bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObejct, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
+        bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObejct, 
+        ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -45,6 +52,9 @@ public partial class CameraRenderer
         ExecuteBuffer();
         // 光源数据和阴影数据发送到GPU计算光照
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObejct);
+
+        postFXStack.Setup(context, camera, postFXSettings);
+
         buffer.EndSample(SampleName);
         Setup();
 
@@ -55,8 +65,11 @@ public partial class CameraRenderer
 
         //绘制Gizmos
         DrawGizmos();
-        // 释放申请的RT内存空间
-        lighting.Cleanup();
+        if (postFXStack.IsActive)
+        {
+            postFXStack.Render(frameBufferId);
+        }
+        Cleanup();
 
         //提交命令缓冲区
         Submit();
@@ -121,6 +134,14 @@ public partial class CameraRenderer
         context.SetupCameraProperties(camera);
         //得到相机的clear flags
         CameraClearFlags flags = camera.clearFlags;
+
+        if (postFXStack.IsActive)
+        {
+            // 设置相机的渲染目标 （用一个RT来存储相机的渲染结果，中间帧缓冲区）
+            buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Bilinear, RenderTextureFormat.Default);
+            buffer.SetRenderTarget(frameBufferId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        }
+
         //设置相机清除状态
         buffer.ClearRenderTarget(flags <= CameraClearFlags.Depth, flags == CameraClearFlags.Color, 
             flags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
@@ -152,5 +173,14 @@ public partial class CameraRenderer
             return true;
         }
         return false;
+    }
+
+    void Cleanup()
+    {
+        lighting.Cleanup();
+        if (postFXStack.IsActive)
+        {
+            buffer.ReleaseTemporaryRT(frameBufferId);
+        }
     }
 }
