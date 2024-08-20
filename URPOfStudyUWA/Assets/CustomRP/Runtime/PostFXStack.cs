@@ -71,14 +71,15 @@ public partial class PostFXStack
     void DoBloom(int sourceId)
     {
         buffer.BeginSample("Bloom");
+        PostFXSettings.BloomSettings bloom = settings.Bloom;
         int width = camera.pixelWidth / 2, height = camera.pixelHeight / 2;
         RenderTextureFormat format = RenderTextureFormat.Default;
         int fromId = sourceId;
         int toId = bloomPyramidId;
         int i;
-        for (i = 0; i < maxBloomPyramidLevels; i++)
+        for (i = 0; i < bloom.maxIterations; i++)
         {
-            if (height < 1 || width > 1)
+            if (height < bloom.downscaleLimit || width < bloom.downscaleLimit)
             {
                 break;
             }
