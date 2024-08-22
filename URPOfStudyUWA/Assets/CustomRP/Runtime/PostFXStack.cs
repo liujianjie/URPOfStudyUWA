@@ -21,6 +21,8 @@ public partial class PostFXStack
 
     enum Pass
     {
+        BloomHorizontal,
+        BloomVertical,
         Copy
     }
 
@@ -33,7 +35,7 @@ public partial class PostFXStack
     public PostFXStack()
     {
         bloomPyramidId = Shader.PropertyToID("_BloomPyramid0");
-        for (int i = 1; i < maxBloomPyramidLevels; i++)
+        for (int i = 1; i < maxBloomPyramidLevels * 2; i++)
         {
             Shader.PropertyToID("_BloomPyramid" + i);
         }
@@ -75,7 +77,7 @@ public partial class PostFXStack
         int width = camera.pixelWidth / 2, height = camera.pixelHeight / 2;
         RenderTextureFormat format = RenderTextureFormat.Default;
         int fromId = sourceId;
-        int toId = bloomPyramidId;
+        int toId = bloomPyramidId + 1;
         int i;
         for (i = 0; i < bloom.maxIterations; i++)
         {
@@ -83,17 +85,23 @@ public partial class PostFXStack
             {
                 break;
             }
+            int midId = toId - 1;
+            buffer.GetTemporaryRT(midId, width, height, 0, FilterMode.Bilinear, format);
             buffer.GetTemporaryRT(toId, width, height, 0, FilterMode.Bilinear, format);
-            Draw(fromId, toId, Pass.Copy);
+            Draw(fromId, toId, Pass.BloomHorizontal);
+            Draw(midId, toId, Pass.BloomVertical);
             fromId = toId;
-            toId += 1;
+            toId += 2;
             width /= 2;
             height /= 2;
         }
-        Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
-        for(i -= 1; i >= 0; i--)
+        //Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
+        Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.BloomHorizontal);
+        for (i -= 1; i >= 0; i--)
         {
-            buffer.ReleaseTemporaryRT(bloomPyramidId + i);
+            buffer.ReleaseTemporaryRT(fromId);
+            buffer.ReleaseTemporaryRT(fromId - 1);
+            fromId -= 2;
         }
         buffer.EndSample("Bloom");
 
