@@ -10,6 +10,8 @@ struct Varyings
 TEXTURE2D(_PostFXSource);
 SAMPLER(sampler_linear_clamp);
 
+TEXTURE2D(_PostFXSource2);
+
 float4 _PostFXSource_TexelSize;
 
 float4 GetSource(float2 screenUV)
@@ -17,11 +19,21 @@ float4 GetSource(float2 screenUV)
     return SAMPLE_TEXTURE2D_LOD(_PostFXSource, sampler_linear_clamp, screenUV, 0);
     //return SAMPLE_TEXTURE2D(_PostFXSource, sampler_linear_clamp, screenUV);
 }
+float4 GetSource2(float2 screenUV)
+{
+    return SAMPLE_TEXTURE2D_LOD(_PostFXSource2, sampler_linear_clamp, screenUV, 0);
+}
+
 float4 GetSourceTexelSize()
 {
     return _PostFXSource_TexelSize;
 }
-
+float4 BloomCombinePassFragment(Varyings input) : SV_TARGET
+{
+    float3 lowRes = GetSource(input.screenUV).rgb;
+    float3 hightRes = GetSource2(input.screenUV).rgb;
+    return float4(lowRes + hightRes, 1.0);
+}
 float4 BloomHorizontalPassFragment(Varyings input) : SV_TARGET
 {
     float3 color = 0.0;
