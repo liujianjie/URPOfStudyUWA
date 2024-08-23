@@ -110,12 +110,13 @@ public partial class PostFXStack
         {
             buffer.ReleaseTemporaryRT(fromId - 1);
             toId -= 5;
-            for (i -= 1; i >= 0; i--)
+            for (i -= 1; i > 0; i--)
             {
                 buffer.SetGlobalTexture(fxSource2Id, toId + 1);
                 Draw(fromId, toId, Pass.BloomCombine);
                 buffer.ReleaseTemporaryRT(fromId);
-                buffer.ReleaseTemporaryRT(fromId - 1);
+                buffer.ReleaseTemporaryRT(toId+ 1);
+
                 fromId = toId;
                 toId -= 2;
             }

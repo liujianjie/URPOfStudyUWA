@@ -30,6 +30,7 @@ float4 GetSourceTexelSize()
 }
 float4 BloomCombinePassFragment(Varyings input) : SV_TARGET
 {
+    return float4(1.0, 1.0, 1.0, 1.0);
     float3 lowRes = GetSource(input.screenUV).rgb;
     float3 hightRes = GetSource2(input.screenUV).rgb;
     return float4(lowRes + hightRes, 1.0);
