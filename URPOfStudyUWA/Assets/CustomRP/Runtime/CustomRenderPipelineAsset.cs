@@ -12,16 +12,18 @@ public class CustomRenderPipelineAsset : RenderPipelineAsset
     //设置批处理启用状态
     [SerializeField]
     bool useDynamicBatching = true, useGPUInstancing = true, useSRPBatcher = true;
-    //是否使用逐对象光照
+
+    // 是否使用逐对象光照
     [SerializeField]
     bool useLightsPerObject = true;
     //阴影配置
     [SerializeField]
     ShadowSettings shadows = default;
-    //后处理配置
+
     [SerializeField]
     PostFXSettings postFXSettings = default;
-    //重写抽象方法，需要返回一个RenderPipeline实例对象
+
+    // 重写抽象方法，需要防护一个RenderPipeLine实例对象
     protected override RenderPipeline CreatePipeline()
     {
         return new CustomRenderPipeline(useDynamicBatching, useGPUInstancing, useSRPBatcher, useLightsPerObject, shadows, postFXSettings);

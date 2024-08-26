@@ -8,16 +8,18 @@ using UnityEngine.Rendering;
 public partial class CustomRenderPipeline : RenderPipeline
 {
     CameraRenderer renderer = new CameraRenderer();
-    bool useDynamicBatching, useGPUInstancing, useLightsPerObject;
+    bool useDynamicBatching, useGPUInstancing;
     //阴影的配置
     ShadowSettings shadowSettings;
-    //后处理的配置
+    // 是否使用逐对象光照
+    bool useLightsPerObject;
+
     PostFXSettings postFXSettings;
 
-    public CustomRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
+    public CustomRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, 
+        ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
         this.shadowSettings = shadowSettings;
-        this.postFXSettings = postFXSettings;
 
         this.useDynamicBatching = useDynamicBatching;
         this.useGPUInstancing = useGPUInstancing;
@@ -25,6 +27,7 @@ public partial class CustomRenderPipeline : RenderPipeline
         GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
         //灯光使用线性强度
         GraphicsSettings.lightsUseLinearIntensity = true;
+        this.postFXSettings = postFXSettings;
 
         InitializeForEditor();
     }

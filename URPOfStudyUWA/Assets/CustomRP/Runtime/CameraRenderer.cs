@@ -25,14 +25,17 @@ public partial class CameraRenderer
     //光照实例
     Lighting lighting = new Lighting();
 
+    // 使用堆栈
     PostFXStack postFXStack = new PostFXStack();
-    //相机的帧缓冲区
+    // 相机的帧缓冲区
     static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
+
     /// <summary>
     /// 相机渲染
     /// </summary>
     public void Render(ScriptableRenderContext context, Camera camera,
-        bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject,ShadowSettings shadowSettings, PostFXSettings postFXSettings)
+        bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObejct, 
+        ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -47,41 +50,31 @@ public partial class CameraRenderer
         }
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
+        // 光源数据和阴影数据发送到GPU计算光照
+        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObejct);
 
-        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);
         postFXStack.Setup(context, camera, postFXSettings);
+
         buffer.EndSample(SampleName);
         Setup();
 
         //绘制几何体
-        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing,useLightsPerObject);
+        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing, useLightsPerObejct);
         //绘制SRP不支持的内置shader类型
         DrawUnsupportedShaders();
 
         //绘制Gizmos
+        //DrawGizmos();
         DrawGizmosBeforeFX();
         if (postFXStack.IsActive)
         {
             postFXStack.Render(frameBufferId);
         }
         DrawGizmosAfterFX();
-        // 释放申请的RT内存空间
         Cleanup();
 
         //提交命令缓冲区
         Submit();
-    }
-    /// <summary>
-    /// 释放申请的RT内存空间
-    /// </summary>
-    void Cleanup()
-    {
-        
-        lighting.Cleanup();
-        if (postFXStack.IsActive)
-        {
-            buffer.ReleaseTemporaryRT(frameBufferId);
-        }
     }
 
     /// <summary>
@@ -101,7 +94,12 @@ public partial class CameraRenderer
             //设置渲染时批处理的使用状态
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing,
-            perObjectData = PerObjectData.Lightmaps | PerObjectData.ShadowMask | PerObjectData.LightProbe | PerObjectData.OcclusionProbe | PerObjectData.LightProbeProxyVolume | PerObjectData.OcclusionProbeProxyVolume | PerObjectData.ReflectionProbes | lightsPerObjectFlags
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.ShadowMask 
+            | PerObjectData.LightProbe | PerObjectData.OcclusionProbe 
+            | PerObjectData.LightProbeProxyVolume 
+            | PerObjectData.OcclusionProbeProxyVolume
+            | PerObjectData.ReflectionProbes
+            | lightsPerObjectFlags
         };
         //渲染CustomLit表示的pass块
         drawingSettings.SetShaderPassName(1, litShaderTagId);
@@ -141,13 +139,16 @@ public partial class CameraRenderer
 
         if (postFXStack.IsActive)
         {
+            // 始终清除深度和颜色
             if (flags > CameraClearFlags.Color)
             {
                 flags = CameraClearFlags.Color;
             }
-            buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight,32, FilterMode.Bilinear, RenderTextureFormat.Default);
-            buffer.SetRenderTarget(frameBufferId,RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            // 设置相机的渲染目标 （用一个RT来存储相机的渲染结果，中间帧缓冲区）
+            buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Bilinear, RenderTextureFormat.Default);
+            buffer.SetRenderTarget(frameBufferId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         }
+
         //设置相机清除状态
         buffer.ClearRenderTarget(flags <= CameraClearFlags.Depth, flags == CameraClearFlags.Color, 
             flags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
@@ -179,5 +180,14 @@ public partial class CameraRenderer
             return true;
         }
         return false;
+    }
+
+    void Cleanup()
+    {
+        lighting.Cleanup();
+        if (postFXStack.IsActive)
+        {
+            buffer.ReleaseTemporaryRT(frameBufferId);
+        }
     }
 }
