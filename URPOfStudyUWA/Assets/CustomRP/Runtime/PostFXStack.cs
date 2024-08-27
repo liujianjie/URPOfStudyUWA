@@ -97,15 +97,13 @@ public partial class PostFXStack
             int midId = toId - 1;
             buffer.GetTemporaryRT(midId, width, height, 0, FilterMode.Bilinear, format);
             buffer.GetTemporaryRT(toId, width, height, 0, FilterMode.Bilinear, format);
-            Draw(fromId, toId, Pass.BloomHorizontal);
+            Draw(fromId, midId, Pass.BloomHorizontal);
             Draw(midId, toId, Pass.BloomVertical);
             fromId = toId;
             toId += 2;
             width /= 2;
             height /= 2;
         }
-        //Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
-        //Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.BloomHorizontal);
         if (i > 1)
         {
             buffer.ReleaseTemporaryRT(fromId - 1);
