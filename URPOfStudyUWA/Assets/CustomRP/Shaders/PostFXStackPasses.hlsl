@@ -1,5 +1,6 @@
 ﻿#ifndef CUSTOM_POST_FX_PASSES_INCLUDED
 #define CUSTOM_POST_FX_PASSES_INCLUDED
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Filtering.hlsl"
 
 struct Varyings
 {
@@ -13,15 +14,23 @@ SAMPLER(sampler_linear_clamp);
 TEXTURE2D(_PostFXSource2);
 
 float4 _PostFXSource_TexelSize;
+bool _BloomBicubicUpsampling;
 
+//采样源纹理
 float4 GetSource(float2 screenUV)
 {
     return SAMPLE_TEXTURE2D_LOD(_PostFXSource, sampler_linear_clamp, screenUV, 0);
     //return SAMPLE_TEXTURE2D(_PostFXSource, sampler_linear_clamp, screenUV);
 }
+//采样第二个源纹理
 float4 GetSource2(float2 screenUV)
 {
     return SAMPLE_TEXTURE2D_LOD(_PostFXSource2, sampler_linear_clamp, screenUV, 0);
+}
+//双三次滤波上采样
+float4 GetSourceBicubc(float2 screenUV)
+{
+    return SampleTexture2DBicubic(TEXTURE2D_ARGS(_PostFXSource, sampler_linear_clamp), screenUV, _PostFXSource_TexelSize.zwxy, 1.0, 0.0);
 }
 
 float4 GetSourceTexelSize()
@@ -30,10 +39,19 @@ float4 GetSourceTexelSize()
 }
 float4 BloomCombinePassFragment(Varyings input) : SV_TARGET
 {
-    float3 lowRes = GetSource(input.screenUV).rgb;
+    float3 lowRes;
+    if (_BloomBicubicUpsampling)
+    {
+        lowRes = GetSourceBicubc(input.screenUV).rgb;
+    }
+    else
+    {
+        lowRes = GetSource(input.screenUV).rgb;
+    }
     float3 hightRes = GetSource2(input.screenUV).rgb;
     return float4(lowRes + hightRes, 1.0);
 }
+//在水平方向的进行滤波
 float4 BloomHorizontalPassFragment(Varyings input) : SV_TARGET
 {
     float3 color = 0.0;
@@ -51,6 +69,7 @@ float4 BloomHorizontalPassFragment(Varyings input) : SV_TARGET
     return float4(color, 1.0);
 
 }
+//在竖直方向的进行滤波
 float4 BloomVerticalPassFragment(Varyings input) : SV_TARGET
 {
     float3 color = 0.0;

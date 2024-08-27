@@ -15,6 +15,7 @@ public partial class PostFXStack
 
     int fxSourceId = Shader.PropertyToID("_PostFXSource");
     int fxSource2Id = Shader.PropertyToID("_PostFXSource2");
+    int bloomBucibicUpsamplingId = Shader.PropertyToID("_BloomBicubicUpsampling");
 
     const int maxBloomPyramidLevels = 16;
 
@@ -104,6 +105,7 @@ public partial class PostFXStack
             width /= 2;
             height /= 2;
         }
+        buffer.SetGlobalFloat(bloomBucibicUpsamplingId, bloom.bicubicUpsampling ? 1f : 0f);
         if (i > 1)
         {
             buffer.ReleaseTemporaryRT(fromId - 1);
