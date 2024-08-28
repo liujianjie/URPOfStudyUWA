@@ -16,7 +16,7 @@ TEXTURE2D(_PostFXSource2);
 float4 _PostFXSource_TexelSize;
 bool _BloomBicubicUpsampling;
 float4 _BloomThreshold;
-
+float _BloomIntensity;
 //采样源纹理
 float4 GetSource(float2 screenUV)
 {
@@ -61,7 +61,7 @@ float4 BloomCombinePassFragment(Varyings input) : SV_TARGET
         lowRes = GetSource(input.screenUV).rgb;
     }
     float3 hightRes = GetSource2(input.screenUV).rgb;
-    return float4(lowRes + hightRes, 1.0);
+    return float4(lowRes * _BloomIntensity + hightRes, 1.0);
 }
 //在水平方向的进行滤波
 float4 BloomHorizontalPassFragment(Varyings input) : SV_TARGET
