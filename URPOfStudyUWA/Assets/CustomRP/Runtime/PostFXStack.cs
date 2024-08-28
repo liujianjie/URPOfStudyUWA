@@ -17,6 +17,7 @@ public partial class PostFXStack
     int fxSource2Id = Shader.PropertyToID("_PostFXSource2");
     int bloomBucibicUpsamplingId = Shader.PropertyToID("_BloomBicubicUpsampling");
     int bloomPrefilterId = Shader.PropertyToID("_BloomPrefilter");
+    int bloomThresholdId = Shader.PropertyToID("_BloomThreshold");
 
     const int maxBloomPyramidLevels = 16;
 
@@ -33,6 +34,7 @@ public partial class PostFXStack
         BloomHorizontal,
         BloomVertical,
         BloomCombine,
+        BloomPrefilter,
         Copy
     }
     public PostFXStack()
@@ -84,10 +86,18 @@ public partial class PostFXStack
             buffer.EndSample("Bloom");
             return;
         }
+        // 发送阙值和相关数据
+        Vector4 threshold;
+        threshold.x = Mathf.GammaToLinearSpace(bloom.threshold);
+        threshold.y = threshold.x * bloom.thresholdKnee;
+        threshold.z = 2f * threshold.y;
+        threshold.w = 0.25f / (threshold.y + 0.00001f);
+        threshold.y -= threshold.x;
+        buffer.SetGlobalVector(bloomThresholdId, threshold);
 
         RenderTextureFormat format = RenderTextureFormat.Default;
         buffer.GetTemporaryRT(bloomPrefilterId, width, height, 0, FilterMode.Bilinear, format);
-        Draw(sourceId, bloomPrefilterId, Pass.Copy);
+        Draw(sourceId, bloomPrefilterId, Pass.BloomPrefilter);
         width /= 2;
         height /= 2;
 

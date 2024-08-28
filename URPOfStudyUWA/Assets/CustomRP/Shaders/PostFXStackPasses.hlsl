@@ -15,6 +15,7 @@ TEXTURE2D(_PostFXSource2);
 
 float4 _PostFXSource_TexelSize;
 bool _BloomBicubicUpsampling;
+float4 _BloomThreshold;
 
 //采样源纹理
 float4 GetSource(float2 screenUV)
@@ -31,6 +32,17 @@ float4 GetSource2(float2 screenUV)
 float4 GetSourceBicubc(float2 screenUV)
 {
     return SampleTexture2DBicubic(TEXTURE2D_ARGS(_PostFXSource, sampler_linear_clamp), screenUV, _PostFXSource_TexelSize.zwxy, 1.0, 0.0);
+}
+
+float3 ApplyBloomThreshold(float3 color)
+{
+    float brightness = Max3(color.r, color.g, color.b);
+    float soft = brightness + _BloomThreshold.y;
+    soft = clamp(soft, 0.0, _BloomThreshold.z);
+    soft = soft * soft * _BloomThreshold.w;
+    float contribution = max(soft, brightness - _BloomBicubicUpsampling.x);
+    contribution /= max(brightness, 0.00001);
+    return color * contribution;
 }
 
 float4 GetSourceTexelSize()
@@ -111,6 +123,12 @@ Varyings DefaultPassVertex(uint vertexID :SV_VertexID)
 float4 CopyPassFragment(Varyings input) : SV_TARGET{
     //return float4(input.screenUV, 0.0, 1.0);
     return GetSource(input.screenUV);
+}
+
+float4 BloomPrefilterPassFragment(Varyings input) :SV_TARGET
+{
+    float3 color = ApplyBloomThreshold(GetSource(input.screenUV).rgb);
+    return float4(color, 1.0);
 }
 
 
