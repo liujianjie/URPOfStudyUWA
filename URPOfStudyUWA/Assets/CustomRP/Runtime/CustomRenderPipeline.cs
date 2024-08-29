@@ -13,12 +13,14 @@ public partial class CustomRenderPipeline : RenderPipeline
     ShadowSettings shadowSettings;
     // 是否使用逐对象光照
     bool useLightsPerObject;
+    bool allowHDR;
 
     PostFXSettings postFXSettings;
 
-    public CustomRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, 
+    public CustomRenderPipeline(bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, 
         ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
+        this.allowHDR = allowHDR;
         this.shadowSettings = shadowSettings;
 
         this.useDynamicBatching = useDynamicBatching;
@@ -36,7 +38,7 @@ public partial class CustomRenderPipeline : RenderPipeline
         //遍历所有相机单独渲染
         foreach (Camera camera in cameras)
         {
-            renderer.Render(context, camera, useDynamicBatching, useGPUInstancing, useLightsPerObject, shadowSettings, postFXSettings);
+            renderer.Render(context, camera, allowHDR,useDynamicBatching, useGPUInstancing, useLightsPerObject, shadowSettings, postFXSettings);
         }
     }
 }

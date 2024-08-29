@@ -29,11 +29,11 @@ public partial class CameraRenderer
     PostFXStack postFXStack = new PostFXStack();
     // 相机的帧缓冲区
     static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
-
+    bool useHDR;
     /// <summary>
     /// 相机渲染
     /// </summary>
-    public void Render(ScriptableRenderContext context, Camera camera,
+    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR
         bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObejct, 
         ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
@@ -48,6 +48,7 @@ public partial class CameraRenderer
         {
             return;
         }
+        useHDR = allowHDR && camera.allowHDR;
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
         // 光源数据和阴影数据发送到GPU计算光照
