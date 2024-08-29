@@ -54,7 +54,7 @@ public partial class CameraRenderer
         // 光源数据和阴影数据发送到GPU计算光照
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObejct);
 
-        postFXStack.Setup(context, camera, postFXSettings);
+        postFXStack.Setup(context, camera, postFXSettings, useHDR);
 
         buffer.EndSample(SampleName);
         Setup();
