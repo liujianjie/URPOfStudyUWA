@@ -33,7 +33,7 @@ public partial class CameraRenderer
     /// <summary>
     /// 相机渲染
     /// </summary>
-    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR
+    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR,
         bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObejct, 
         ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
@@ -146,7 +146,8 @@ public partial class CameraRenderer
                 flags = CameraClearFlags.Color;
             }
             // 设置相机的渲染目标 （用一个RT来存储相机的渲染结果，中间帧缓冲区）
-            buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Bilinear, RenderTextureFormat.Default);
+            buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Bilinear,
+                useHDR ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.Default);
             buffer.SetRenderTarget(frameBufferId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         }
 
