@@ -50,6 +50,16 @@ Shader "Hidden/Custom RP/Post FX Stack"
            #pragma fragment BloomPrefilterPassFragment
            ENDHLSL
         }
+		//淡化荧光闪烁
+		Pass {
+			Name "Bloom Prefilter Fireflies"
+			
+			HLSLPROGRAM
+				#pragma target 3.5
+				#pragma vertex DefaultPassVertex
+				#pragma fragment BloomPrefilterFirefliesPassFragment
+			ENDHLSL
+		}
         Pass
         {
 			Name "Copy"
